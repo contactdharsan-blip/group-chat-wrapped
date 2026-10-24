@@ -51,7 +51,8 @@ group-chat-wrapped/
 │   ├── slides.py       Builds the slide deck as one HTML page (1080x1920 slides)
 │   ├── render.py       Renders slides to PNG with Playwright WebKit (no Chromium)
 │   ├── cli.py          python -m wrapped.cli chat.txt --out out/   (works with no accounts)
-│   └── discord_bot.py  (phase 3) /wrapped, /wrapped optin; reads channel history, posts the slides
+│   └── platforms/      (phase 3) discord_bot.py (/wrapped optin|optout|run), imessage.py (one group, via chat.db
+│                       and Messages); Instagram is an importer (--format instagram)
 ├── demo/demo-chat.txt  invented 4-person friend group, one semester, ~2,000 messages (generated)
 └── tests/
 ```
