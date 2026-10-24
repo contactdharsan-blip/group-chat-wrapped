@@ -1,0 +1,51 @@
+{
+  "participants": [
+    {"name": "Maya"},
+    {"name": "Jordan"},
+    {"name": "RenÃ©e"},
+    {"name": "Theo"}
+  ],
+  "messages": [
+    {
+      "sender_name": "Theo",
+      "timestamp_ms": 1788286200000,
+      "content": "Liked a message"
+    },
+    {
+      "sender_name": "RenÃ©e",
+      "timestamp_ms": 1788285960000,
+      "content": "who is coming to the cafÃ© tonight?"
+    },
+    {
+      "sender_name": "Jordan",
+      "timestamp_ms": 1788285780000,
+      "photos": [
+        {"uri": "your_instagram_activity/messages/inbox/floor4_123/photos/1.jpg", "creation_timestamp": 1788285780}
+      ]
+    },
+    {
+      "sender_name": "Maya",
+      "timestamp_ms": 1788285720000,
+      "content": "omw ð\u009f\u0098­",
+      "reactions": [
+        {"reaction": "ð\u009f\u0098\u0082", "actor": "Jordan"},
+        {"reaction": "ð\u009f\u0098\u0082", "actor": "RenÃ©e"}
+      ]
+    },
+    {
+      "sender_name": "Theo",
+      "timestamp_ms": 1788285660000,
+      "content": "this is unsent",
+      "is_unsent": true
+    },
+    {
+      "sender_name": "Jordan",
+      "timestamp_ms": 1788285600000,
+      "content": "first day of the semester!!! ð\u009f\u0094¥"
+    }
+  ],
+  "title": "Floor 4 Survivors",
+  "is_still_participant": true,
+  "thread_path": "inbox/floor4_123",
+  "magic_words": []
+}

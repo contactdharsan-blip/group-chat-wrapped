@@ -1,0 +1,41 @@
+{
+  "participants": [
+    {"name": "Maya"},
+    {"name": "Jordan"},
+    {"name": "RenÃ©e"},
+    {"name": "Theo"}
+  ],
+  "messages": [
+    {
+      "sender_name": "Maya",
+      "timestamp_ms": 1788341700000,
+      "content": "Maya sent an attachment.",
+      "share": {"link": "https://www.instagram.com/reel/EXAMPLE/", "share_text": "invented reel"}
+    },
+    {
+      "sender_name": "Theo",
+      "timestamp_ms": 1788341580000,
+      "content": "ok ok I'm up",
+      "reactions": [
+        {"reaction": "â\u009d¤ï¸\u008f", "actor": "Maya"}
+      ]
+    },
+    {
+      "sender_name": "RenÃ©e",
+      "timestamp_ms": 1788341460000,
+      "content": "WAKE UP THEO ð\u009f\u0098\u0082ð\u009f\u0098\u0082"
+    },
+    {
+      "sender_name": "Jordan",
+      "timestamp_ms": 1788341400000,
+      "content": "anyone up for breakfast?",
+      "videos": [
+        {"uri": "your_instagram_activity/messages/inbox/floor4_123/videos/2.mp4", "creation_timestamp": 1788341400}
+      ]
+    }
+  ],
+  "title": "Floor 4 Survivors",
+  "is_still_participant": true,
+  "thread_path": "inbox/floor4_123",
+  "magic_words": []
+}

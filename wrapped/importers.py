@@ -5,6 +5,8 @@ Supported:
     and Android style                  ``10/24/26, 21:41 - Name: text``
   * Discord channel JSON in the DiscordChatExporter shape
   * CSV with a ``timestamp,author,text`` header
+  * Instagram "Download your information" JSON: one ``message_N.json`` file, or
+    the chat's folder holding ``message_1.json``, ``message_2.json``...
 """
 
 from __future__ import annotations
@@ -147,15 +149,86 @@ def parse_csv(text: str) -> list[Message]:
     )
 
 
+def _unmojibake(s):
+    # Instagram writes UTF-8 bytes as if each byte were a Latin-1 character
+    # ("ð\x9f\x98\x82" for 😂). Undo that; leave text alone when it isn't.
+    if not isinstance(s, str):
+        return s
+    try:
+        return s.encode("latin-1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return s
+
+
+# Notices Instagram stores as messages although nobody typed them.
+_IG_NOTICE = re.compile(r"^(Liked a message|Reacted .* to your message|.* sent an attachment\.)$", re.DOTALL)
+_IG_MEDIA_KEYS = ("photos", "videos", "audio_files", "gifs", "files")
+
+
+def _instagram_messages(data: dict) -> list[Message]:
+    messages = []
+    for raw in data.get("messages", []):
+        if raw.get("is_unsent") or "timestamp_ms" not in raw or "sender_name" not in raw:
+            continue
+        text = _unmojibake(raw.get("content") or "")
+        attachments = sum(len(raw.get(k) or []) for k in _IG_MEDIA_KEYS)
+        attachments += 1 if raw.get("share") else 0
+        attachments += 1 if raw.get("sticker") else 0
+        if _IG_NOTICE.match(text):
+            if not attachments:
+                continue  # "Liked a message": a reaction, already on its target
+            text = ""  # "Maya sent an attachment." is a share's placeholder
+        reactions: dict[str, int] = {}
+        for r in raw.get("reactions") or []:
+            emoji = _unmojibake(r.get("reaction"))
+            if emoji:
+                reactions[emoji] = reactions.get(emoji, 0) + 1
+        messages.append(
+            Message(
+                # timestamp_ms is UTC; shown as this machine's local wall clock.
+                ts=datetime.fromtimestamp(raw["timestamp_ms"] / 1000),
+                author=_unmojibake(raw["sender_name"]),
+                text=text,
+                reactions=reactions,
+                attachments=attachments,
+            )
+        )
+    return messages
+
+
+def parse_instagram(text: str) -> list[Message]:
+    # Instagram lists messages newest first; _sorted puts them oldest first.
+    return _sorted(_instagram_messages(json.loads(text)))
+
+
+def _part_number(path: Path) -> int:
+    m = re.search(r"(\d+)$", path.stem)
+    return int(m.group(1)) if m else 0
+
+
+def load_instagram(path: str | Path) -> list[Message]:
+    """One message_N.json, or a chat folder with message_1.json, message_2.json..."""
+    path = Path(path)
+    files = sorted(path.glob("message_*.json"), key=_part_number) if path.is_dir() else [path]
+    if not files:
+        raise ValueError(f"no message_*.json files in {path}")
+    messages = []
+    for f in files:
+        messages.extend(_instagram_messages(json.loads(f.read_text(encoding="utf-8"))))
+    return _sorted(messages)
+
+
 def _sorted(messages) -> list[Message]:
     # Stable: messages with equal timestamps keep export order.
     return sorted(messages, key=lambda m: m.ts)
 
 
-PARSERS = {"whatsapp": parse_whatsapp, "discord": parse_discord, "csv": parse_csv}
+PARSERS = {"whatsapp": parse_whatsapp, "discord": parse_discord, "csv": parse_csv, "instagram": parse_instagram}
 
 
 def load(path: str | Path, fmt: str) -> list[Message]:
     if fmt not in PARSERS:
         raise ValueError(f"unknown format {fmt!r}; expected one of {', '.join(PARSERS)}")
+    if fmt == "instagram":
+        return load_instagram(path)
     return PARSERS[fmt](Path(path).read_text(encoding="utf-8-sig"))

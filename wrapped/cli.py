@@ -1,4 +1,4 @@
-"""python -m wrapped.cli <chat file> --format whatsapp|discord|csv --optin "A,B,C" --out out/"""
+"""python -m wrapped.cli <chat file> --format whatsapp|discord|csv|instagram --optin "A,B,C" --out out/"""
 
 from __future__ import annotations
 
