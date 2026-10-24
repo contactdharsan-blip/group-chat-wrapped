@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import importers, render, slides, stats
+from . import captions, importers, profiles, render, slides, stats
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -18,6 +18,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", default="out", help="output directory")
     p.add_argument("--name", default="Group Chat Wrapped", help="chat name for the title slide")
     p.add_argument("--no-render", action="store_true", help="skip the PNG and MP4 step")
+    p.add_argument("--claude", action="store_true",
+                   help="write award captions with Claude into captions.json (templates otherwise; needs the Keychain key)")
     args = p.parse_args(argv)
 
     opted = {n.strip() for n in args.optin.split(",") if n.strip()}
@@ -32,8 +34,13 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "stats.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    client = captions.make_client() if args.claude else None
+    if args.claude and client is None:
+        print("note: no anthropic SDK or no Keychain key, so captions are templates", file=sys.stderr)
+    caps = captions.captions(result["awards"], profiles.build(messages, result), client)
+    (out / "captions.json").write_text(json.dumps(caps, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     html = out / "slides.html"
-    html.write_text(slides.build_html(result, args.name), encoding="utf-8")
+    html.write_text(slides.build_html(result, args.name, caps["awards"]), encoding="utf-8")
     print(f"{len(messages):,} messages, {len(result['awards'])} awards -> {out}/stats.json, {html}")
 
     if args.no_render:

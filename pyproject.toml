@@ -6,3 +6,15 @@ requires-python = ">=3.12"
 # The engine, the CLI and the iMessage bridge use the standard library only.
 # discord.py is needed only by wrapped/platforms/discord_bot.py.
 dependencies = ["discord.py==2.5.2"]
+
+[project.optional-dependencies]
+# The web app (wrapped/server.py). httpx is for FastAPI's TestClient in the tests.
+web = ["fastapi", "uvicorn", "python-multipart", "httpx"]
+# AI captions (wrapped/captions.py, --claude). Off by default.
+ai = ["anthropic"]
+
+[tool.setuptools]
+packages = ["wrapped", "wrapped.platforms"]
+
+[tool.setuptools.package-data]
+wrapped = ["data/*.txt", "render_slides.cjs"]
