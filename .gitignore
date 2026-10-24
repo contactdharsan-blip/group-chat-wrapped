@@ -5,3 +5,4 @@ out/
 .env
 node_modules/
 .claude/
+.venv/

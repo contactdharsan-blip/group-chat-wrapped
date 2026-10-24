@@ -1,0 +1,8 @@
+[project]
+name = "group-chat-wrapped"
+version = "0.3.0"
+description = "Spotify Wrapped for a group chat."
+requires-python = ">=3.12"
+# The engine, the CLI and the iMessage bridge use the standard library only.
+# discord.py is needed only by wrapped/platforms/discord_bot.py.
+dependencies = ["discord.py==2.5.2"]
