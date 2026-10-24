@@ -13,10 +13,11 @@ import re
 from collections import Counter
 
 from .model import Message
-from .stats import CHAT_SLANG, EMOJI, STOPWORDS, fmt_hour, words
+from .stats import CHAT_SLANG, EMOJI, STOPWORDS, english_ranks, fmt_hour, words
 
 TOP_WORDS = 5
 TOP_EMOJI = 3
+COMMON_ENGLISH = 600  # top words skip the most common English words, so they say something about the person
 
 
 def handle(name: str) -> str:
@@ -42,6 +43,7 @@ def build(messages: list[Message], result: dict) -> list[dict]:
     members = list(result["members"])
     name_tokens = {t for m in messages for t in words(m.author)}
     by_key = {(m.author, m.ts.isoformat()): m for m in messages}
+    ranks = english_ranks()
     mine: dict[str, list[Message]] = {name: [] for name in members}
     for m in messages:
         if m.author in mine:
@@ -56,6 +58,7 @@ def build(messages: list[Message], result: dict) -> list[dict]:
         vocab = Counter(
             w for m in msgs for w in words(m.text)
             if len(w) >= 3 and w not in STOPWORDS and w not in CHAT_SLANG and w not in name_tokens and "'" not in w
+            and ranks.get(w, COMMON_ENGLISH + 1) > COMMON_ENGLISH
         )
         awards, posts = [], []
         for a in result["awards"]:
