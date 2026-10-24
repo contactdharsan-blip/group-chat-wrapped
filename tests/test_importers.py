@@ -57,6 +57,12 @@ class WhatsAppTests(unittest.TestCase):
         self.assertEqual(msgs[1].attachments, 1)
         self.assertEqual(msgs[2].text, "line one\nline two")
 
+    def test_ios_export_with_media(self):
+        text = f"[8/19/26, 9:41:03{NNBSP}PM] Ana: {LRM}<attached: 00000012-PHOTO-2026-08-19-21-41-03.jpg>\n"
+        msgs = parse_whatsapp(text)
+        self.assertEqual(len(msgs), 1)
+        self.assertEqual((msgs[0].attachments, msgs[0].text), (1, ""))
+
     def test_android_us_twelve_hour(self):
         text = "10/24/26, 9:41 PM - Ana: hi\n10/25/26, 12:01 AM - Ben: late\n"
         msgs = parse_whatsapp(text)

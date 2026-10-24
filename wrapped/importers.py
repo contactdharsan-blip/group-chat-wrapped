@@ -30,7 +30,7 @@ _ANDROID = re.compile(
 )
 # Media placeholders: Android "<Media omitted>", iOS "image omitted", "sticker omitted"...
 _MEDIA = re.compile(
-    r"^(<Media omitted>|(image|video|audio|sticker|GIF|document|Contact card) omitted|.*\bdocument omitted)$",
+    r"^(<Media omitted>|<attached: [^>]*>|(image|video|audio|sticker|GIF|document|Contact card) omitted|.*\bdocument omitted)$",
     re.IGNORECASE,
 )
 _SYSTEM_BODY = re.compile(r"^Messages and calls are end-to-end encrypted", re.IGNORECASE)

@@ -14,6 +14,7 @@ const { webkit } = require(process.env.PLAYWRIGHT_CORE || 'playwright-core');
     await page.goto(pathToFileURL(path.resolve(html)).href);
     await page.evaluate(() => document.fonts.ready);
     const ids = await page.$$eval('section.slide', (els) => els.map((e) => e.id));
+    // page.evaluate / $$eval are Playwright page-side evaluators, not JS eval(); they run our own fixed code.
     // Safe-zone check: nothing inside a slide may reach the bottom 350 px or the right 120 px.
     const overflow = await page.$$eval('section.slide', (els) => els.flatMap((s) => {
       const box = s.getBoundingClientRect();
