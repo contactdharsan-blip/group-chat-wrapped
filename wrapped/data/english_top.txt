@@ -1,0 +1,260 @@
+# Common English words in approximate frequency order (most common first).
+# Hand-assembled for Group Chat Wrapped; the ranks are approximate. Used only to
+# estimate how unusual a word is, via Zipf's law (frequency ~ 1 / rank).
+the of and to a in is it you that he was for on are with as i his they be at one have this
+from or had by not word but what some we can out other were all there when up use your how said
+an each she which do their time if will way about many then them write would like so these her
+long make thing see him two has look more day could go come did number sound no most people my
+over know water than call first who may down side been now find any new work part take get place
+made live where after back little only round man year came show every good me give our under name
+very through just form sentence great think say help low line differ turn cause much mean before
+move right boy old too same tell does set three want air well also play small end put home read
+hand port large spell add even land here must big high such follow act why ask men change went
+light kind off need house picture try us again animal point mother world near build self earth
+father head stand own page should country found answer school grow study still learn plant cover
+food sun four between state keep eye never last let thought city tree cross farm hard start might
+story saw far sea draw left late run don't while press close night real life few north open seem
+together next white children begin got walk example ease paper group always music those both mark
+often letter until mile river car feet care second book carry took science eat room friend began
+idea fish mountain stop once base hear horse cut sure watch color face wood main enough plain girl
+usual young ready above ever red list though feel talk bird soon body dog family direct pose leave
+song measure door product black short numeral class wind question happen complete ship area half
+rock order fire south problem piece told knew pass since top whole king space heard best hour
+better true during hundred five remember step early hold west ground interest reach fast verb sing
+listen six table travel less morning ten simple several vowel toward war lay against pattern slow
+center love person money serve appear road map rain rule govern pull cold notice voice unit power
+town fine certain fly fall lead cry dark machine note wait plan figure star box noun field rest
+correct able pound done beauty drive stood contain front teach week final gave green oh quick
+develop ocean warm free minute strong special mind behind clear tail produce fact street inch
+multiply nothing course stay wheel full force blue object decide surface deep moon island foot
+system busy test record boat common gold possible plane stead dry wonder laugh thousand ago ran
+check game shape equate hot miss brought heat snow tire bring yes distant fill east paint language
+among grand ball yet wave drop heart am present heavy dance engine position arm wide sail material
+size vary settle speak weight general ice matter circle pair include divide syllable felt perhaps
+pick sudden count square reason length represent art subject region energy hunt probable bed
+brother egg ride cell believe fraction forest sit race window store summer train sleep prove lone
+leg exercise wall catch mount wish sky board joy winter sat written wild instrument kept glass
+grass cow job edge sign visit past soft fun bright gas weather month million bear finish happy
+hope flower clothe strange gone jump baby eight village meet root buy raise solve metal whether
+push seven paragraph third shall held hair describe cook floor either result burn hill safe cat
+century consider type law bit coast copy phrase silent tall sand soil roll temperature finger
+industry value fight lie beat excite natural view sense ear else quite broke case middle kill son
+lake moment scale loud spring observe child straight consonant nation dictionary milk speed method
+organ pay age section dress cloud surprise quiet stone tiny climb cool design poor lot experiment
+bottom key iron single stick flat twenty skin smile crease hole trade melody trip office receive
+row mouth exact symbol die least trouble shout except wrote seed tone join suggest clean break lady
+yard rise bad blow oil blood touch grew cent mix team wire cost lost brown wear garden equal sent
+choose fell fit flow fair bank collect save control decimal gentle woman captain practice separate
+difficult doctor please protect noon whose locate ring character insect caught period indicate
+radio spoke atom human history effect electric expect crop modern element hit student corner party
+supply bone rail imagine provide agree thus capital won't chair danger fruit rich thick soldier
+process operate guess necessary sharp wing create neighbor wash bat rather crowd corn compare poem
+string bell depend meat rub tube famous dollar stream fear sight thin triangle planet hurry chief
+colony clock mine tie enter major fresh search send yellow gun allow print dead spot desert suit
+current lift rose continue block chart hat sell success company subtract event particular deal
+swim term opposite wife shoe shoulder spread arrange camp invent cotton born determine quart nine
+truck noise level chance gather shop stretch throw shine property column molecule select wrong
+gray repeat require broad prepare salt nose plural anger claim continent oxygen sugar death pretty
+skill women season solution magnet silver thank branch match suffix especially fig afraid huge
+sister steel discuss forward similar guide experience score apple bought led pitch coat mass card
+band rope slip win dream evening condition feed tool total basic smell valley nor double seat
+arrive master track parent shore division sheet substance favor connect post spend chord fat glad
+original share station dad bread charge proper bar offer segment slave duck instant market degree
+populate chick dear enemy reply drink occur support speech nature range steam motion path liquid
+log meant quotient teeth shell neck
+also really something nothing everything anything someone anyone everyone maybe actually probably
+literally basically honestly seriously definitely totally pretty kinda sorta gonna wanna gotta
+okay yeah yep nope sure fine cool nice great awesome amazing perfect weird crazy funny stupid cute
+tonight today tomorrow yesterday weekend monday tuesday wednesday thursday friday saturday sunday
+january february march april june july august september october november december
+morning afternoon evening midnight noon hour hours minutes seconds week weeks month months year
+years semester class classes lecture lectures exam exams test tests quiz quizzes homework
+assignment assignments project projects paper papers essay essays grade grades professor
+professors campus library dorm dorms roommate roommates dining hall halls lab labs midterm midterms
+final finals study studying notes office hours section sections syllabus credit credits major
+minor degree college university school student students teacher teachers course courses
+coffee lunch dinner breakfast pizza food snack snacks drinks water tea chicken rice burger
+sandwich salad fries cookies cake dessert
+game games football basketball soccer team teams score won lost win lose play played playing
+watch watching watched movie movies show shows episode season music song songs concert party
+parties birthday weekend trip flight drive car bus train uber ride walk walking
+phone text texts call called calling message messages chat group email emails app apps photo
+photos picture pictures video videos post posted story stories link
+feel feeling felt tired sleep sleeping slept awake sick hungry bored stressed happy sad mad
+scared excited nervous worried sorry glad proud jealous lonely
+mom dad brother sister family friend friends guy guys girl girls people person everybody nobody
+somebody anybody
+went going goes gone coming came come leaving left leave staying stay meet meeting met wait
+waiting waited hurry late early soon later again already still yet ever never always sometimes
+usually often rarely
+thing things stuff place places way ways time times day days night nights life world
+work working worked job jobs money pay paid buy bought sell sold cost costs free cheap expensive
+said says saying tell told telling ask asked asking answer answered talk talked talking speak
+think thought thinking know knew known knowing want wanted wanting need needed needing like liked
+liking love loved loving hate hated hating hope hoped hoping wish wished wishing
+make made making take took taking taken give gave giving given get got getting gotten
+see saw seeing seen look looked looking looks find found finding try tried trying tries
+help helped helping start started starting stop stopped stopping keep kept keeping
+put putting let letting run running ran move moved moving open opened close closed
+read reading write writing wrote written learn learned learning teach taught
+remember remembered forget forgot forgotten understand understood mean meant means
+happen happened happening change changed changing turn turned turning
+because since though although unless until while whereas however therefore otherwise
+there here where everywhere somewhere anywhere nowhere inside outside upstairs downstairs
+should would could might must shall will can cannot can't couldn't wouldn't shouldn't
+isn't aren't wasn't weren't haven't hasn't hadn't doesn't didn't won't don't i'm you're we're
+they're he's she's it's that's what's there's here's who's i've you've we've they've i'll you'll
+we'll they'll he'll she'll i'd you'd we'd they'd let's
+able about above across after against along among around before behind below beneath beside
+besides between beyond during except inside into near onto outside over past through throughout
+toward towards under underneath upon within without
+government business system program question during without problem service another around
+however national development public following water information against including
+american although business community president provide several research social political
+economic international million local health different education possible important
+available members including understand already business information national
+area areas idea ideas level levels case cases point points fact facts issue issues
+side sides part parts kind kinds sort sorts lot lots bit bits piece pieces
+hand hands head heads face faces eye eyes body bodies mind minds heart hearts
+house houses home homes room rooms door doors window windows floor floors wall walls
+building buildings city cities town towns street streets road roads country countries
+state states nation nations world worlds earth land lands sea seas sky skies
+reason reasons result results example examples number numbers group groups
+word words name names line lines story stories book books page pages letter letters
+news report reports article articles question questions answer answers
+moment moments minute while period periods century centuries history future past present
+power control force forces energy effect effects value values price prices
+plan plans goal goals rule rules law laws right rights order orders policy policies
+experience experiences knowledge skill skills ability abilities chance chances
+problem problems situation situations condition conditions process processes
+health care hospital doctor doctors nurse patient patients medicine disease
+science technology computer computers internet software data network online website
+market markets company companies industry industries product products service services
+customer customers business businesses office offices staff manager managers
+social media news culture art arts music film films television radio
+war wars peace army military police security crime court courts
+church religion god faith spirit soul
+human humans animal animals plant plants tree trees flower flowers grass
+weather rain snow wind storm sun moon star stars cloud clouds
+hot cold warm cool wet dry dark light bright clear loud quiet
+big small large little huge tiny tall short long wide narrow thick thin heavy light
+fast slow quick early late young old new fresh modern ancient
+good bad better worse best worst great poor rich strong weak hard soft easy difficult simple
+right wrong true false real fake sure certain possible impossible likely unlikely
+important serious major minor main basic general specific special particular
+whole entire full empty complete total single double half
+first second third last next previous final
+same different similar other another else such certain various
+own personal private public social political economic national international
+high low deep shallow upper lower inner outer
+beautiful pretty ugly nice lovely wonderful terrible horrible awful bad fine
+happy sad angry afraid surprised interested bored tired sick healthy
+important interesting boring exciting amazing incredible unbelievable ridiculous
+obviously clearly apparently certainly surely exactly nearly almost hardly barely simply
+especially particularly generally usually normally typically mostly mainly
+quickly slowly easily carefully suddenly finally recently currently eventually immediately
+completely totally absolutely entirely fully partly slightly highly extremely incredibly
+together alone apart away back forward ahead behind around about
+yes no not never none neither either both each every all any some many much few several
+enough more most less least lots plenty
+one two three four five six seven eight nine ten eleven twelve twenty thirty forty fifty hundred
+thousand million billion once twice
+mr mrs ms dr sir madam
+please thanks thank welcome sorry excuse hello hi hey bye goodbye
+okay alright wow ugh hmm huh oops yay
+dinner tonight everyone anyone gonna wait what's whats
+accept accepted access account accounts achieve achieved action actions active activity activities actor
+actress added adding address adult advance advantage advice affect afford agency agent agents
+agreement aid aim aircraft airport alive allowed amount analysis angle announce announced annual
+anybody apartment apparent appeal appearance apply applied approach approve argue argument arms
+arrival arrived arrest artist aside asleep aspect assume attack attempt attend attention attitude
+audience author authority average avoid award aware bag balance ban basis basket bath battle beach
+bean beautiful bedroom beer beginning behavior belief belong benefit beside bet bike bill bind biology
+birth bitter blame blank blind blog bomb bond border boss bother bottle bowl brain brand brave breath
+brief bridge broken budget bunch button cabin cable calculate camera campaign cancel cancer candidate
+cap capable capture career careful cash cast castle casual category ceiling celebrate central chain
+challenge champion channel chapter chase cheat cheese chemical chemistry chest choice cinema citizen
+civil classic classroom clever client climate clinic clothes club clue coach code coin collapse
+colleague collection combine comfort comfortable command comment commercial committee communicate
+compete competition complain complaint complex component concentrate concept concern conclusion
+conduct conference confidence confirm conflict confused congress connection conscious consequence
+conservative consist constant construct consumer contact content contest context contract contribute
+conversation convince cookie core corporate council counter county couple courage cousin crack craft
+crash cream creative creature crew criminal crisis critic critical crucial cultural cup curious curve
+cycle daily damage dangerous date daughter deadline debate debt decade decision declare decline
+defeat defend defense define definition delay deliver delivery demand democracy deny department
+deposit depression depth description deserve desire desk despite destroy detail detect device devil
+diet digital direction director dirt dirty disagree disappear disaster discipline discount discover
+discovery discussion dish dismiss display distance district dive divorce document domestic dominant
+doubt downtown dozen draft drag drama dramatic drawer drawing dressed drunk due dust duty eager earn
+economy edit edition editor educate effective efficient effort elderly elect election electricity
+elite embarrassed emerge emergency emotion emotional emphasis employ employee encounter encourage
+engage engineer engineering enjoy enormous ensure entertainment enthusiasm entrance environment
+equipment error escape essential establish estate estimate ethnic evaluate evidence evil examine
+excellent exchange exhibit exist existence exit expand expectation expert explain explanation explore
+explosion expose express expression extend extent extra extreme fabric facility factor factory fail
+failure faint fairly familiar fan fancy fantastic fantasy fashion fault favorite feature federal fee
+female fence festival fever fiction fifteen file finance financial firm fix flag flash flight float
+flood focus folk fold following fool foreign forever forgive formal former fortune foundation frame
+frankly freedom frequent freshman fridge friendly friendship frozen fuel function fund funeral
+furniture gain gallery gap garage gender gene generate generation genius gesture ghost giant gift
+glance global glove golden golf gorgeous grab grace gradually graduate grain grandmother grant
+grateful grave greatly grocery gross growth guarantee guard guest guilty gym habit handle hang harm
+headline heal hearing heaven height hell helpful hero hidden hide highway hire historic hobby holiday
+hollow honest honey honor hook horror host hotel household housing hug humor hunger hurt husband
+identify identity ignore ill illegal illness image imagination impact implement imply impose impress
+impression improve incident income increase increasingly independent index individual infant
+influence inform initial injury innocent input insight insist inspire install instance instead
+institution instruction insurance intelligence intelligent intend intense intention internal
+interpret interview introduce introduction invest investigate investment invitation invite involve
+item jacket jail jeans joint joke journal journey judge juice junior jury justice justify keen kick
+kid kiss kitchen knee knife knock label labor ladder lamp landscape lane laptop largely laser lately
+latter launch lawn lawyer layer lazy leader leadership league lean leather legal legend lemon lens
+lesson liberal license lid limit limited link lip literature load loan lobby location lock loose lord
+loss lover lucky luggage luxury magazine magic mail mainly maintain majority male mall manage
+management manner manufacturer margin marine marriage married massive mate math maximum mayor meal
+meanwhile medical medium member membership memory mental mention menu mere mess mirror mission
+mistake mixture mobile mode model moderate monitor mood moral motor mouse movement mud murder muscle
+museum mystery naked nasty native naturally neat necessarily negative negotiate nerve net neutral
+nightmare nod novel nuclear nurse nut obey objective obligation observation obtain obvious occasion
+occupy odd offend offense officer official ok opera operation opinion opponent opportunity oppose
+option orange ordinary organic organization organize origin outcome outfit oven overall owe owner
+pace pack package pain painful painting palace pale pan panel panic pants parking participate partner
+partly passage passenger passion passport password pasta patience pause peak peer pen penalty pencil
+pension pepper percent perfectly perform performance permanent permission permit personality
+perspective pet phase philosophy photograph physical physics piano pile pilot pin pink pipe pity
+plastic plate platform pleasant pleased pleasure plot pocket poet poetry poison pole politics
+pollution pool pop popular population portion portrait positive possess possibility potato potential
+pour poverty powerful practical praise pray prayer predict prefer pregnant premium preparation
+presence presentation preserve pressure presume prevent previous pride priest primary prince princess
+principal principle prior priority prison prisoner privacy prize procedure proceed producer
+profession professional profile profit progress promise promote prompt proof proportion proposal
+propose prospect protection protein protest proud psychology pub publish pump punch punish purchase
+pure purple purpose pursue puzzle quality quantity quarter queen quote racing radical rage rank rapid
+rare rate rating raw reaction reader reality realize rear reasonable recall recent recipe recognize
+recommend recover recovery recruit reduce reference reflect reform refuse regard regional register
+regret regular reject relate relation relationship relative relax release relevant reliable relief
+religious rely remain remark remind remote remove rent repair replace reporter request rescue
+resident resist resolve resort resource respect respond response responsible restaurant retain
+retire retirement reveal revenue review revolution reward rhythm risk rival role romantic roof rough
+route routine royal ruin rumor rural rush sacred safety salary sale salmon sample sauce scene
+schedule scheme scholar scholarship screen script seal secret secretary secure seek senior sensitive
+sequence series servant session setting severe shade shadow shake shame shift shirt shock shoot
+shooting shopping shot shower shut shy signal significant silence silly sink site ski skip slice
+slide slight smart smoke smooth snap soap society sock sofa solar solid somewhat sophomore soup source
+spare speaker species spending spicy spin split sponsor sport spray squad stable stadium stage stair
+stake stamp stance standard stare statement statistic status steady steal steep stem stock stomach
+storage strategy straw strength stress strict strike structure struggle stuck studio style
+substantial succeed successful suck suffer sufficient suggestion suitable summit super supper
+supporter suppose supreme surgery surround survey survive suspect sustain swallow sweater sweet swing
+switch sympathy tackle tale talent tank tap tape target task taste tax taxi teaching tear technical
+technique teenager telephone telescope temple tend tendency tennis tension tent terrific territory
+terror texture theater theme theory therapy thesis thief threat threaten ticket tight timing tip
+tissue title toast tobacco toe toilet tomato ton tongue tooth topic tough tour tourist tower toy trace
+tradition traditional traffic tragedy trail transfer transform transition translate transport trap
+trash treat treatment trend trial trick troop tropical trust truth tunnel twin twist typical uncle
+unique universe unusual upset urban urge useful user valuable van variety vast vegetable vehicle
+venture version vessel veteran victim victory viewer violence virtual virus visible vision visitor
+visual vital volume volunteer vote wage wake wallet wander warn warning waste weak wealth weapon
+wedding weekly welfare whale wheat whisper widely willing wine winner wise witness wonderful wooden
+worry worth wound wrap yell youth zone
