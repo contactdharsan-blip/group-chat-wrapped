@@ -56,13 +56,26 @@ group-chat-wrapped/
 └── tests/
 ```
 
+## Platforms (phase 3)
+
+- **Discord:** the "hercules" bot. `/wrapped optin`, then `/wrapped` reads the channel's history and posts
+  the slides and the MP4 in the channel. Token from the Keychain.
+- **iMessage:** a Mac bridge reads one group chat from `~/Library/Messages/chat.db` (read-only, on the Mac
+  of a member of that chat). When someone in the group types "wrapped", it posts the slides back into the
+  group through the Messages app. Opt-in is by members replying "optin" in the group. It sends only into the
+  chat it was asked to run in.
+- **Instagram:** no bot can join an Instagram group chat (Meta's messaging API covers business accounts
+  in one-to-one threads only). So Wrapped reads Instagram's own chat export ("Download your information",
+  JSON, `messages/inbox/<chat>/message_1.json`). The slides are 1080x1920, which is the Stories size, ready
+  to post.
+
 ## Phases
 
 1. **Importers + stats + CLI (no accounts).** Tests for each importer, each award rule, the tie-breaks,
    and the opt-in filter (a non-opted member never appears by name or quote).
 2. **Slides + render.** A good-looking vertical deck (same visual standard as the Track 1 video),
    rendered to PNGs and a short MP4.
-3. **Discord bot.** Needs a bot token from the owner (Keychain, never in the repo).
+3. **Platforms.** Discord bot, iMessage bridge, Instagram export importer. Tested against fakes; no live sends during the build.
 4. **Video + submit.**
 
 ## Done when
