@@ -60,11 +60,14 @@ def decode_attributed_body(blob: bytes | None) -> str | None:
     if not blob:
         return None
     blob = bytes(blob)
-    i = blob.find(b"NSString")
-    if i < 0:
+    for cls in (b"NSString", b"NSMutableString"):
+        i = blob.find(cls)
+        if i >= 0:
+            break
+    else:
         return None
-    j = blob.find(b"\x01+", i + len(b"NSString"))
-    if j < 0 or j - i > 16:
+    j = blob.find(b"\x01+", i + len(cls))
+    if j < 0 or j - i - len(cls) > 8:
         return None
     p = j + 2
     if p >= len(blob):

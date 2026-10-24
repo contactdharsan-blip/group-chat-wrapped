@@ -108,6 +108,10 @@ class DecoderTests(unittest.TestCase):
         for text in ("omw", "omw 😭 ​ ok", "x" * 127, "y" * 128, "long paragraph 💬 " * 40, "z" * 70_000):
             self.assertEqual(decode_attributed_body(typedstream(text)), text)
 
+    def test_mutable_string_class(self):
+        blob = typedstream("edited 😂").replace(b"\x08NSString", b"\x0fNSMutableString")
+        self.assertEqual(decode_attributed_body(blob), "edited 😂")
+
     def test_bad_blobs_give_none(self):
         self.assertIsNone(decode_attributed_body(None))
         self.assertIsNone(decode_attributed_body(b""))

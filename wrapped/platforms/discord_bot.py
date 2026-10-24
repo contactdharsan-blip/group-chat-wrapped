@@ -195,14 +195,18 @@ def build_bot(handlers: Handlers, guild_id: int | None = None):
 
     tree.add_command(group)
 
-    @client.event
-    async def on_ready():
+    async def setup_hook():  # once per start, not on every reconnect like on_ready
         if guild_id:  # a test server: the commands appear at once
             guild = discord.Object(id=guild_id)
             tree.copy_global_to(guild=guild)
             await tree.sync(guild=guild)
         else:  # everywhere: Discord can take up to an hour to show them
             await tree.sync()
+
+    client.setup_hook = setup_hook
+
+    @client.event
+    async def on_ready():
         print(f"logged in as {client.user}; /wrapped is registered", file=sys.stderr)
 
     return client, tree
