@@ -94,6 +94,9 @@ def fmt_duration(delta: timedelta) -> str:
         m = round(s / 60)
         return f"{m} min"
     h, m = divmod(round(s / 60), 60)
+    if h >= 48:
+        d, h = divmod(h, 24)
+        return f"{d} days {h} h" if h else f"{d} days"
     return f"{h} h {m} min" if m else f"{h} h"
 
 
@@ -228,17 +231,19 @@ def _main_character(ctx):
     w = _pick(scores)
     if not w:
         return None
-    # Receipt: the opening line of their longest uninterrupted run.
-    best_start, best_len, start, run = None, 0, None, 0
+    # Receipt: the opening line of their longest uninterrupted run in one
+    # sitting (no gap over 30 minutes).
+    best_start, best_len, start, run, prev = None, 0, None, 0, None
     for m in ctx.messages:
         if m.author == w:
-            if run == 0:
-                start = m
+            if run == 0 or m.ts - prev.ts > BURST_GAP:
+                start, run = m, 0
             run += 1
             if run > best_len and start.text.strip():
                 best_start, best_len = start, run
         else:
             run = 0
+        prev = m
     if best_start is None:
         return None
     pct = round(100 * scores[w] / len(ctx.messages))
@@ -259,9 +264,11 @@ def _novelist(ctx):
     if not w:
         return None
     longest = _first_by(ctx.mine(w), lambda m: len(words(m.text)))
+    rest = [m for m in ctx.messages if m.author != w and m.text.strip()]
+    rest_avg = sum(len(words(m.text)) for m in rest) / len(rest) if rest else 0
     return _award(
         ctx, "novelist", "The Novelist", w,
-        f"{avgs[w]:.1f} words per message on average",
+        f"{avgs[w]:.1f} words per message on average; everyone else: {rest_avg:.1f}",
         longest, detail=f"Longest message: {len(words(longest.text))} words.",
     )
 
@@ -398,7 +405,8 @@ def _emoji(ctx):
     best = _first_by([m for m in ctx.mine(w) if top in m.text], lambda m: m.text.count(top))
     return _award(
         ctx, "emoji", "Emoji of the Semester", w,
-        f"{top} used {overall[top]:,} times by the group, {per[w]:,} of them by {w}",
+        f"{top} used {overall[top]:,} times"
+        + (f", every single one by {w}" if per[w] == overall[top] else f", {per[w]:,} of them by {w}"),
         best, detail=f"{w} loves it most:",
     ) | {"emoji": top}
 

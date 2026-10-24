@@ -54,6 +54,29 @@ class AwardTests(unittest.TestCase):
         msgs.append(M("Ben", "2026-09-01 10:04", "three"))
         self.check(msgs, "main_character", "Ben")
 
+    def test_main_character_run_is_one_sitting(self):
+        msgs = chat(
+            ("Ana", "2026-09-01 10:00", "x"),
+            ("Ana", "2026-09-01 10:01", "y"),
+            ("Ana", "2026-09-01 15:00", "later"),  # 5 hours on: a new run
+            ("Ana", "2026-09-01 15:01", "z"),
+            ("Ana", "2026-09-01 15:02", "zz"),
+            ("Ben", "2026-09-01 15:03", "hi"),
+        )
+        a = self.check(msgs, "main_character", "Ana")
+        self.assertEqual(a["receipt"]["text"], "later")
+        self.assertIn("3 in a row", a["detail"])
+
+    def test_durations(self):
+        from datetime import timedelta
+
+        from wrapped.stats import fmt_duration
+
+        self.assertEqual(fmt_duration(timedelta(seconds=1)), "1 second")
+        self.assertEqual(fmt_duration(timedelta(minutes=40)), "40 min")
+        self.assertEqual(fmt_duration(timedelta(hours=1, minutes=42)), "1 h 42 min")
+        self.assertEqual(fmt_duration(timedelta(days=3, hours=14)), "3 days 14 h")
+
     def test_novelist(self):
         msgs = chat(
             ("Ana", "2026-09-01 10:00", "short"),
