@@ -97,7 +97,13 @@ All three run the same pipeline and the same consent rule: only people who opted
    can take up to an hour to show them.
 5. In a channel: everyone who wants to be in it runs `/wrapped optin` (`/wrapped optout` to leave), then
    anyone runs `/wrapped run`. The bot reads the newest 20,000 messages (`--limit` changes that) with a
-   progress message, then posts the slides ten per message, and the MP4 if it's under 10 MB.
+   progress message, then posts the slides ten per message, the MP4 if it's under 10 MB, and then one
+   embed per award: the winner's colour, the numbers, the receipt and a caption.
+6. `/wrapped-me` posts your own profile card as an embed: messages, posts, awards, peak hour, badges,
+   top emoji and top words. If you haven't opted in, it tells you privately to run `/wrapped optin`
+   and reads nothing. `--web-url <url>` adds a link to the web app on every embed. (It's `/wrapped-me`
+   and not `/wrapped me` because `tests/test_discord_bot.py` pins the `/wrapped` group to optin, optout
+   and run.)
 
 Opt-ins are kept per channel in `~/.config/group-chat-wrapped/discord-optins.json`. A run works in a
 temporary folder that is deleted after posting. Rendering needs Node, WebKit and ffmpeg on the bot's
@@ -163,6 +169,35 @@ No bot can join an Instagram group chat, so this works from Instagram's own expo
    as one, and tag the friends who opted in.
 
 The test fixture `tests/fixtures/instagram/floor4/` is an invented chat in the export's shape.
+
+## Web app
+
+The companion to the bots, and the way in for Instagram and WhatsApp: drop a chat export, tick who
+agreed to be named, and get a feed of award posts, a profile per opted-in member, an Instagram-style
+story player, and a group page. Nothing is stored: uploads are parsed in memory (20 MB cap) and never
+written to disk or logged.
+
+```sh
+uv venv .venv && uv pip install --python .venv/bin/python fastapi uvicorn python-multipart httpx   # the "web" extra
+npm --prefix web install
+npm --prefix web run build           # web/dist
+.venv/bin/python -m wrapped.server --port 8770   # serves web/dist and /api on http://127.0.0.1:8770
+```
+
+- `GET /api/demo` runs the invented demo chat. `POST /api/members` (multipart `file`, `format` =
+  auto|whatsapp|discord|csv|instagram) lists members and message counts. `POST /api/wrapped` (`file`,
+  `format`, `optin` repeated, `name`) returns the awards, the profiles (opted-in members only), the
+  group page and the captions.
+- `npm --prefix web run build:static` also bakes the demo into `web/dist/demo.json`. Served from a
+  plain static host (no API), the app plays that demo and hides upload. `tests/test_web.py` checks
+  the baked file matches `/api/demo`.
+- Captions and profile bios are templates by default. `--claude` (on `wrapped.server`, `wrapped.cli`
+  and the Discord bot) has Claude write them from the computed award fields only, with the API key read
+  from the Keychain (service `anthropic-api-key`, account `hercules`); any error, refusal or caption
+  with a number that isn't in its facts falls back to the template. Needs `pip install anthropic`.
+- `node scripts/smoke_web.mjs` (after `build:static`) drives the app in Playwright WebKit at 390x844
+  and 1440x900, uploads `demo/demo-chat.txt` with Jordan and Theo unticked and checks their names never
+  reach the DOM, and writes screenshots to `out/screens/`. It starts and stops its own servers.
 
 ## Requirements
 
