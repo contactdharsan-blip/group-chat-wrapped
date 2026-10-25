@@ -439,14 +439,20 @@ class RedactorTests(unittest.TestCase):
         r = Redactor({"+1 (555) 123-4567"})
         for text in ("@15551234567 call me back 555 times!!!", "text +1 (555) 123-4567 later",
                      "my number is 555-123-4567 call me?", "or (555) 123-4567", "call +44 7911 123456?",
-                     "my number is 4805551234", "order #1234567890 shipped?", "pay me 1000000000 dollars?"):
+                     "my number is 4805551234", "order #1234567890 shipped?", "pay me 1000000000 dollars?",
+                     # India, UK, Australia, France
+                     "98765 43210", "call 098765 43210", "98765-43210", "+91 98765 43210", "07911 123456",
+                     "020 7946 0958", "(02) 9374 4000", "0412 345 678", "01 23 45 67 89", "555.123.4567?",
+                     "+1 555 123 4567?", "call 2 98765 43210"):
             self.assertFalse(r.quotable(text), text)
 
     def test_ordinary_numbers_stay_quotable_and_untouched(self):
         r = Redactor({"Kayla"})
         for text in ("lunch @12 tomorrow?", "meet @7pm!!!", "countdown 10 9 8 7 6 5 4 3 2 1!!!",
                      "scores 100 100 100 100 lol?", "train at 2026-10-24 10:30?", "temps 1.5 2.5 3.5 4.5 5.5?",
-                     "it's 12:30 on 10/24?", "tracking 1Z999AA10123456784?", "code is 4821, room 1102, bldg 7?"):
+                     "it's 12:30 on 10/24?", "tracking 1Z999AA10123456784?", "code is 4821, room 1102, bldg 7?",
+                     "scores 100 200 300 400", "zip 85281-1234?", "isbn 978-0-306-40615-7?", "pi 3.14159 2.71828",
+                     "12 34 56 78 90 go", "$1,000,000,000 lol"):
             self.assertTrue(r.quotable(text), text)
             self.assertEqual(r(text), text)
 

@@ -132,15 +132,42 @@ def nicknames(name: str) -> set[str]:
     return {_capitalised(first[:k]) for k in range(3, len(first)) if not is_ordinary_word(first[:k])}
 
 
-# Phone-number shapes, never just any digits: an @-mention of 7+ digits (how
-# WhatsApp writes a contact with no name), +country groups, (555) 123-4567 with
-# single separators, or one unbroken run of 10-15 digits.
-PHONE = re.compile(
-    r"@\+?\d{7,}"
-    r"|(?<![\w+])\+\d{1,3}(?:[ .-]?\(?\d{1,6}\)?){2,5}(?!\w)"
-    r"|(?<![\w(])\(?\d{3}\)?[ .-]?\d{3}[ .-]?\d{4}(?!\w)"
-    r"|(?<!\w)\d{10,15}(?!\w)"
-)
+# An @-mention of 7+ digits, as WhatsApp writes a contact with no name.
+_DIGIT_HANDLE = re.compile(r"@\+?\d{7,}")
+# A run of digit groups joined by single spaces, dashes or dots, the first
+# maybe after "+" and any in brackets: "+44 7911 123456", "(02) 9374 4000".
+_NUMBER_RUN = re.compile(r"(?<![\w+])\+?\(?\d+\)?(?:[ .-]\(?\d+\)?)*(?!\w)")
+
+
+def _phone_shaped(groups: list[str], lead: str) -> bool:
+    """Whether these digit groups read as one phone number. lead is what came
+    before the first group ("+", "(" or "")."""
+    digits = sum(map(len, groups))
+    if not (10 <= digits <= 15 or (digits == 9 and lead)):
+        return False
+    body = groups[1:] if lead == "+" else groups  # a country code can be one digit
+    if any(len(g) < 2 for g in body):
+        return False  # countdowns, decimals, ISBNs
+    pairs = groups[0].startswith("0") and all(len(g) == 2 for g in groups)  # France: 01 23 45 67 89
+    if len(groups) > 1 and len(groups[-1]) < 3 and not pairs:
+        return False  # a date with a time: 2026-10-24 10:30
+    same = len({len(g) for g in groups}) == 1 and len(groups[0]) <= 3
+    return not (same and len(groups) > 1 and not lead and not groups[0].startswith("0"))  # "100 200 300 400"
+
+
+def has_phone_number(text: str) -> bool:
+    """A phone number by shape: 10-15 digits in groups (9 after "+" or "("),
+    groups of 2+ digits ending in one of 3+, never a list of same-size small
+    numbers unless it starts with 0 ("01 23 45 67 89"); or @ and 7+ digits."""
+    if _DIGIT_HANDLE.search(text):
+        return True
+    for run in _NUMBER_RUN.finditer(text):
+        groups = [(g.group(1) or "", g.group(2)) for g in re.finditer(r"(\+|\()?(\d+)", run.group())]
+        for i in range(len(groups)):
+            for j in range(i + 1, min(len(groups), i + 6) + 1):
+                if _phone_shaped([d for _, d in groups[i:j]], groups[i][0]):
+                    return True
+    return False
 
 
 class Redactor:
@@ -203,7 +230,7 @@ class Redactor:
         return self._pattern.sub(SOMEONE, text) if self._pattern else text
 
     def quotable(self, text: str) -> bool:
-        if PHONE.search(text):
+        if has_phone_number(text):
             return False
         text = self(text)
         if self._unsure and self._unsure.search(text):
