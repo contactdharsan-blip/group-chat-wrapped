@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import colorsys
 import json
 import os
 import subprocess
@@ -124,14 +125,10 @@ SendEmbeds = Callable[[list[dict]], Awaitable[None]]
 # Plain dicts in Discord's embed shape (discord.Embed.from_dict turns them into
 # Embeds), so they are built and tested without discord.py.
 
-# The web app's six flat pops (web/src/styles.css --pop-0..5): pink, blue, lime,
-# purple, tangerine, yellow.
-PALETTE = (0xFF4FA3, 0x2B59FF, 0xB6F23E, 0x7A3CF0, 0xFF8A1F, 0xFFD60A)
-
-
 def hue_color(hue: int) -> int:
-    """A person's stable embed colour: one of the web app's pops, picked by their hue."""
-    return PALETTE[hue % len(PALETTE)]
+    """The web app's avatar colour, hsl(hue 72% 62%), as a Discord embed colour."""
+    r, g, b = colorsys.hls_to_rgb(hue / 360, 0.62, 0.72)
+    return (round(r * 255) << 16) | (round(g * 255) << 8) | round(b * 255)
 
 
 def _clip(text: str, limit: int = FIELD_MAX) -> str:
