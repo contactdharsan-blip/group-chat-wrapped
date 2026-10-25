@@ -374,11 +374,31 @@ class RedactorTests(unittest.TestCase):
         r = Redactor({"Benjamin"}, named={"Ben"})
         self.assertEqual(r("Ben and Benjamin and Benj"), "Ben and someone and someone")
 
-    def test_phone_numbers_and_digit_handles(self):
+    def test_phone_numbers_make_a_message_unquotable(self):
+        # A message with a phone number isn't rewritten; it just can't be a receipt.
         r = Redactor({"+1 (555) 123-4567"})
-        self.assertEqual(r("@15551234567 call me back 555 times!!!"), "someone call me back 555 times!!!")
-        self.assertEqual(r("text +1 (555) 123-4567 or 555-123-4567 by 2026"), "text someone or someone by 2026")
-        self.assertEqual(Redactor(set())("my number is 4805551234"), "my number is someone")
+        for text in ("@15551234567 call me back 555 times!!!", "text +1 (555) 123-4567 later",
+                     "my number is 555-123-4567 call me?", "or (555) 123-4567", "call +44 7911 123456?",
+                     "my number is 4805551234", "order #1234567890 shipped?", "pay me 1000000000 dollars?"):
+            self.assertFalse(r.quotable(text), text)
+
+    def test_ordinary_numbers_stay_quotable_and_untouched(self):
+        r = Redactor({"Kayla"})
+        for text in ("lunch @12 tomorrow?", "meet @7pm!!!", "countdown 10 9 8 7 6 5 4 3 2 1!!!",
+                     "scores 100 100 100 100 lol?", "train at 2026-10-24 10:30?", "temps 1.5 2.5 3.5 4.5 5.5?",
+                     "it's 12:30 on 10/24?", "tracking 1Z999AA10123456784?", "code is 4821, room 1102, bldg 7?"):
+            self.assertTrue(r.quotable(text), text)
+            self.assertEqual(r(text), text)
+
+    def test_unquotable_message_gives_way_to_the_next_best_receipt(self):
+        msgs = chat(("Ana", "2026-09-01 10:00", "my number is 555-123-4567 call me any time this week ok?"),
+                    ("Ana", "2026-09-01 10:01", "see you there"), ("Ana", "2026-09-01 10:02", "ok"),
+                    ("Ben", "2026-09-01 10:03", "k"))
+        result = compute(msgs, {"Ana", "Ben"})
+        self.assertEqual(award(result, "novelist")["receipt"]["text"], "see you there")
+        self.assertEqual(award(result, "novelist")["detail"], "One of their longest: 3 words.")
+        self.assertNotIn("555", json.dumps(result))
+        assert_receipts_real(self, result, msgs)
 
     def test_phone_author_mention_never_quoted(self):
         rows = []

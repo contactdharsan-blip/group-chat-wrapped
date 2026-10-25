@@ -125,9 +125,15 @@ def nicknames(name: str) -> set[str]:
     return {_capitalised(first[:k]) for k in range(3, len(first)) if not is_ordinary_word(first[:k])}
 
 
-# A phone number (10-15 digits, with spaces, dots, dashes or brackets between
-# them) or an @-mention made of digits, as WhatsApp writes a contact without a name.
-PHONE = re.compile(r"@\+?\d+|(?<![\w@+(])(?:\+|\()?\d(?:[ ().-]{0,2}\d){9,14}(?!\d)")
+# Phone-number shapes, never just any digits: an @-mention of 7+ digits (how
+# WhatsApp writes a contact with no name), +country groups, (555) 123-4567 with
+# single separators, or one unbroken run of 10-15 digits.
+PHONE = re.compile(
+    r"@\+?\d{7,}"
+    r"|(?<![\w+])\+\d{1,3}(?:[ .-]?\(?\d{1,6}\)?){2,5}(?!\w)"
+    r"|(?<![\w(])\(?\d{3}\)?[ .-]?\d{3}[ .-]?\d{4}(?!\w)"
+    r"|(?<!\w)\d{10,15}(?!\w)"
+)
 
 
 class Redactor:
@@ -137,7 +143,11 @@ class Redactor:
     that is an ordinary word ("Will", "Grace"), which matches only capitalised
     so "I will" survives. Capitalised nicknames of a first name match too,
     unless one is part of an opted-in member's name (hidden "Benjamin" doesn't
-    hide opted-in "Ben"). Phone numbers and @digits are always replaced."""
+    hide opted-in "Ben").
+
+    A message it can't clean without guessing isn't rewritten: ``quotable``
+    says no, and the award picks its next-best message. A phone number makes a
+    message unquotable."""
 
     def __init__(self, hidden_names: set[str], named: set[str] = frozenset()):
         keep = {t.casefold() for n in named for t in n.split()}
@@ -160,8 +170,10 @@ class Redactor:
         self._pattern = re.compile(r"@?\b(?:" + "|".join(a for _, a in alts) + r")\b") if alts else None
 
     def __call__(self, text: str) -> str:
-        text = PHONE.sub(SOMEONE, text)
         return self._pattern.sub(SOMEONE, text) if self._pattern else text
+
+    def quotable(self, text: str) -> bool:
+        return not PHONE.search(text)
 
 
 # ----------------------------------------------------------------- compute ---
@@ -233,9 +245,19 @@ class _Context:
         self.by_author: dict[str, list[Message]] = defaultdict(list)
         for m in messages:
             self.by_author[m.author].append(m)
+        self._quotable: dict[int, bool] = {}
 
     def mine(self, author: str, with_text=True) -> list[Message]:
         return [m for m in self.by_author[author] if m.text.strip() or not with_text]
+
+    def quotable(self, m: Message) -> bool:
+        """Whether m can be a receipt: it has text that redacts cleanly."""
+        if id(m) not in self._quotable:
+            self._quotable[id(m)] = bool(m.text.strip()) and self.redact.quotable(m.text)
+        return self._quotable[id(m)]
+
+    def quotes(self, msgs) -> list[Message]:
+        return [m for m in msgs if self.quotable(m)]
 
     def receipt(self, m: Message) -> dict:
         return {"author": m.author, "ts": m.ts.isoformat(), "text": self.redact(m.text)}
@@ -327,7 +349,7 @@ def _main_character(ctx):
             if run == 0 or m.ts - prev.ts > BURST_GAP:
                 start, run = m, 0
             run += 1
-            if run > best_len and start.text.strip():
+            if run > best_len and ctx.quotable(start):
                 best_start, best_len = start, run
         else:
             run = 0
@@ -351,7 +373,12 @@ def _novelist(ctx):
     w = _pick(_named(ctx, avgs))
     if not w:
         return None
-    longest = _first_by(ctx.mine(w), lambda m: len(words(m.text)))
+    quotes = ctx.quotes(ctx.mine(w))
+    if not quotes:
+        return None
+    longest = _first_by(quotes, lambda m: len(words(m.text)))
+    most = max(len(words(m.text)) for m in ctx.mine(w))
+    n = plural(len(words(longest.text)), "word")
     rest = [m for m in ctx.messages if m.author != w and m.text.strip()]
     value = f"{avgs[w]:.1f} words per message on average"
     if rest:  # in a one-person chat there is no "everyone else"
@@ -359,7 +386,7 @@ def _novelist(ctx):
     return _award(
         ctx, "novelist", "The Novelist", w,
         value + _among(ctx, avgs, w, word="highest"),
-        longest, detail=f"Longest message: {plural(len(words(longest.text)), 'word')}.",
+        longest, detail=f"Longest message: {n}." if len(words(longest.text)) == most else f"One of their longest: {n}.",
     )
 
 
@@ -369,7 +396,10 @@ def _three_am(ctx):
     w = _pick(_named(ctx, counts))
     if not w:
         return None
-    best = _first_by(late[w], lambda m: len(words(m.text)))
+    quotes = ctx.quotes(late[w])
+    if not quotes:
+        return None
+    best = _first_by(quotes, lambda m: len(words(m.text)))
     return _award(
         ctx, "three_am", "3 AM Philosopher", w,
         f"{plural(counts[w], 'message')} sent between 1 and 5 AM" + _among(ctx, counts, w),
@@ -392,7 +422,10 @@ def _omw(ctx):
         gap = (n.ts - m.ts) if n else timedelta(0)
         return gap if gap <= OMW_FOLLOWUP_CAP else timedelta(0)
 
-    best = _first_by(omws[w], wait)
+    quotes = ctx.quotes(omws[w])
+    if not quotes:
+        return None
+    best = _first_by(quotes, wait)
     detail = f"Their next message came {fmt_duration(wait(best))} later." if wait(best) else ""
     return _award(
         ctx, "omw", "“omw” (they were not)", w,
@@ -421,8 +454,11 @@ def _left_on_read(ctx):
     w = _pick(_named(ctx, counts))
     if not w:
         return None
+    quotes = [(m, gap) for m, gap in ignored[w] if ctx.quotable(m)]
+    if not quotes:
+        return None
     forever = timedelta(days=100000)
-    m, gap = max(ignored[w], key=lambda mg: (mg[1] or forever, -_secs(mg[0].ts)))
+    m, gap = max(quotes, key=lambda mg: (mg[1] or forever, -_secs(mg[0].ts)))
     detail = "Nobody ever answered." if gap is None else f"First reply from anyone: {fmt_duration(gap)} later."
     return _award(
         ctx, "left_on_read", "Left On Read", w,
@@ -437,7 +473,10 @@ def _hype(ctx):
     w = _pick(_named(ctx, counts))
     if not w:
         return None
-    best = _first_by(hype[w], lambda m: sum(c.isupper() for c in m.text) + m.text.count("!"))
+    quotes = ctx.quotes(hype[w])
+    if not quotes:
+        return None
+    best = _first_by(quotes, lambda m: sum(c.isupper() for c in m.text) + m.text.count("!"))
     return _award(
         ctx, "hype", "Hype Machine", w,
         f"{plural(counts[w], 'message')} in ALL CAPS or with “!!!”" + _among(ctx, counts, w),
@@ -460,10 +499,13 @@ def _speed_demon(ctx):
     if not w:
         return None
     # Receipt: their fastest reply, preferring one to a named member (context is shown).
+    quotes = [t for t in replies[w] if ctx.quotable(t[1])]
+    if not quotes:
+        return None
     gap, reply, prev = min(
-        replies[w], key=lambda t: (t[2].author not in ctx.named or not t[2].text.strip(), t[0], t[1].ts)
+        quotes, key=lambda t: (t[2].author not in ctx.named or not ctx.quotable(t[2]), t[0], t[1].ts)
     )
-    context = prev if prev.author in ctx.named and prev.text.strip() else None
+    context = prev if prev.author in ctx.named and ctx.quotable(prev) else None
     return _award(
         ctx, "speed_demon", "Speed Demon", w,
         f"median reply time: {fmt_duration(timedelta(seconds=medians[w]))}"
@@ -483,7 +525,10 @@ def _ghost(ctx):
     w = _pick(eligible, lowest=True)
     if not w:
         return None
-    shortest = min(ctx.mine(w), key=lambda m: (len(m.text.strip()), m.ts))
+    quotes = ctx.quotes(ctx.mine(w))
+    if not quotes:
+        return None
+    shortest = min(quotes, key=lambda m: (len(m.text.strip()), m.ts))
     total = len(ctx.messages)
     return _award(
         ctx, "ghost", "The Ghost", w,
@@ -505,7 +550,10 @@ def _emoji(ctx):
     w = _pick(_named(ctx, per))
     if not w:
         return None
-    best = _first_by([m for m in ctx.mine(w) if uses(m)], uses)
+    quotes = [m for m in ctx.quotes(ctx.mine(w)) if uses(m)]
+    if not quotes:
+        return None
+    best = _first_by(quotes, uses)
     return _award(
         ctx, "emoji", "Emoji of the Semester", w,
         f"{top} used {plural(overall[top], 'time')}"
@@ -549,7 +597,11 @@ def _group_word(ctx):
     w = _pick(_named(ctx, per))
     if not w:
         return None
-    first = min((m for m in ctx.mine(w) if pattern.search(m.text)), key=lambda m: m.ts)
+    said = [m for m in ctx.mine(w) if pattern.search(m.text)]
+    quotes = ctx.quotes(said)
+    if not quotes:
+        return None
+    first = quotes[0]
     if word in ranks:
         # Zipf estimate of how often English uses this word, per word of text.
         harmonic = sum(1 / r for r in range(1, unknown_rank))
@@ -561,7 +613,7 @@ def _group_word(ctx):
         ctx, "group_word", "Group Word", w,
         f"“{word}”, said {counts[word]:,} times; {w} said it most"
         + (" of anyone who opted in" if _among(ctx, per, w) else "") + f" ({per[w]:,})",
-        first, detail=detail + f" {w}’s first time:",
+        first, detail=detail + (f" {w}’s first time:" if first is said[0] else f" {w} saying it:"),
     ) | {"word": word}
 
 
@@ -580,9 +632,9 @@ def _busiest_day(ctx):
         cur.append(m)
     bursts.append(cur)
     biggest = max(bursts, key=lambda b: (len(b), -_secs(b[0].ts)))
-    opener = next((m for m in biggest if m.author in ctx.named and m.text.strip()), None)
+    opener = next((m for m in biggest if m.author in ctx.named and ctx.quotable(m)), None)
     if opener is None:
-        opener = next((m for m in by_day[day] if m.author in ctx.named and m.text.strip()), None)
+        opener = next((m for m in by_day[day] if m.author in ctx.named and ctx.quotable(m)), None)
     if opener is None:
         return None
     return _award(
