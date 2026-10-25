@@ -248,6 +248,11 @@ class HandlerTests(unittest.TestCase):
         reply = run(h.run(FakeChannel(1, self.chat()), "#floor-4", send=None))
         self.assertIn("no webkit", reply)
 
+    def test_make_story_refuses_an_empty_chat_clearly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(ValueError, "no messages"):
+                make_story([], {"Maya"}, Path(tmp), "x", render_media=False)
+
     def test_real_pipeline_hides_unopted_members(self):
         # make_story without rendering: only Maya opted in, so Jordan and Theo never appear by name.
         h = Handlers(self.store, render_media=False, story_maker=make_story)

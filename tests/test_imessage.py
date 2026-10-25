@@ -304,6 +304,16 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(self.bridge.poll_once(), ["run skipped: cooldown"])
         self.assertEqual(len(self.sent), 1)
 
+    def test_run_with_only_commands_says_there_is_nothing_to_wrap(self):
+        bridge = Bridge(GROUP, self.sender, Names({"+15550000001": "Maya"}), db_path=self.db.path,
+                        state_path=Path(self.tmp.name) / "s4.json", render_media=False, echo=self.printed.append)
+        bridge.start()
+        self.db.add("+15550000001", "wrapped optin")
+        self.db.add("+15550000001", "wrapped")
+        self.assertEqual(bridge.poll_once(), ["optin Maya", "run: no messages"])
+        self.assertEqual(len(self.sent), 1)
+        self.assertIn("no messages", self.sent[0][1])
+
     def test_other_chats_never_trigger_anything(self):
         self.bridge.start()
         self.db.add("+15550000002", "wrapped optin", chat=self.db.other)

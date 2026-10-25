@@ -21,8 +21,11 @@ class Story:
 def make_story(messages: list[Message], opted: set[str], out: Path, name: str, render_media: bool = True) -> Story:
     """stats.json + slides.html, then (render_media) PNGs and an MP4.
 
-    Raises render.RenderUnavailable when the PNGs can't be made. The MP4 is
-    best effort: without ffmpeg the story is still the PNGs."""
+    Raises ValueError for an empty chat, and render.RenderUnavailable when the
+    PNGs can't be made. The MP4 is best effort: without ffmpeg the story is
+    still the PNGs."""
+    if not messages:
+        raise ValueError("no messages to wrap")
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     result = stats.compute(messages, opted)

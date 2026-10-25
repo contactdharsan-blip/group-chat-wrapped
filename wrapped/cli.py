@@ -24,6 +24,9 @@ def main(argv: list[str] | None = None) -> int:
 
     opted = {n.strip() for n in args.optin.split(",") if n.strip()}
     messages = importers.load(args.chat, args.format)
+    if not messages:
+        print(f"no messages found in {args.chat} reading it as a {args.format} export", file=sys.stderr)
+        return 1
     result = stats.compute(messages, opted)
     authors = {m.author for m in messages}
     unknown = sorted(n for n in opted if not stats.match_optins(authors, {n}))

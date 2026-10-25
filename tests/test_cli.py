@@ -48,6 +48,21 @@ class CliTests(unittest.TestCase):
                 self.assertNotIn("jordan", text, name)
                 self.assertNotIn("theo", text, name)
 
+    def test_export_with_no_messages_says_so(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            chat = Path(tmp) / "empty.txt"
+            chat.write_text("[9/1/26, 12:00:00 PM] Group: \u200eMessages and calls are end-to-end encrypted.\n"
+                            "[9/1/26, 12:00:05 PM] Ana added Ben\n", encoding="utf-8")
+            proc = subprocess.run(
+                [sys.executable, "-m", "wrapped.cli", str(chat), "--optin", "Ana", "--out", str(Path(tmp) / "out"),
+                 "--no-render"],
+                cwd=ROOT, capture_output=True, text=True, timeout=120,
+            )
+            self.assertEqual(proc.returncode, 1, proc.stderr)
+            self.assertIn("no messages found", proc.stderr)
+            self.assertNotIn("Traceback", proc.stderr)
+            self.assertFalse((Path(tmp) / "out").exists())
+
     @unittest.skipUnless(render.can_render(), "node + playwright-core WebKit not available")
     def test_end_to_end_render(self):
         with tempfile.TemporaryDirectory() as tmp:

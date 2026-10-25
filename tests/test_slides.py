@@ -23,6 +23,10 @@ class SlidesTests(unittest.TestCase):
         self.assertEqual(len(ids), len(self.result["awards"]) + 3)
         self.assertEqual(ids, [f"slide-{n:02d}" for n in range(1, len(ids) + 1)])
 
+    def test_empty_result_still_builds(self):
+        html = slides.build_html(compute([], {"Ana"}), "Empty")
+        self.assertIn("0 messages", html)
+
     def test_self_contained(self):
         self.assertTrue(self.html.startswith("<!doctype html>"))
         self.assertNotRegex(self.html, r'(src|href)=["\']?(https?:)?//')

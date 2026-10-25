@@ -123,6 +123,8 @@ def _slide(n: int, bg: str, fg: str, body: str, accent: str | None = None) -> st
 
 
 def _date_range(group: dict) -> str:
+    if "first" not in group:
+        return ""
     a, b = datetime.fromisoformat(group["first"]), datetime.fromisoformat(group["last"])
     left = f"{a.strftime('%b')} {a.day}" + (f", {a.year}" if a.year != b.year else "")
     return f"{left} – {b.strftime('%b')} {b.day}, {b.year}"
@@ -132,7 +134,7 @@ def _title_slide(n: int, name: str, group: dict) -> str:
     body = (
         f'<div class="count">{escape(name)}</div>'
         '<div class="big">Your group chat, <span class="accent">wrapped.</span></div>'
-        f'<div class="sub">{escape(_date_range(group))}<br>{group["messages"]:,} messages</div>'
+        f'<div class="sub">{escape(_date_range(group))}{"<br>" if "first" in group else ""}{group["messages"]:,} messages</div>'
         '<div class="fine">Only friends who opted in are named. Every award quotes a real message.</div>'
     )
     return _slide(n, "#000000", "#FFFFFF", body, accent="#FF2D55")

@@ -360,6 +360,9 @@ class Bridge:
             return "run: nobody opted in"
         with closing(connect(self.db_path)) as conn:
             messages = to_messages(fetch_rows(conn, self._chat_id(conn)), self.names)
+        if not messages:
+            self.sender.send_text("Group Chat Wrapped: there are no messages to wrap in this chat yet.")
+            return "run: no messages"
         opted = {self.names(k) for k in optins}
         with tempfile.TemporaryDirectory(prefix="wrapped-imessage-") as tmp:
             out = Path(self.out_dir) if self.out_dir else Path(tmp)
