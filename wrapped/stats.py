@@ -104,21 +104,59 @@ def fmt_hour(hour: int) -> str:
     return f"{(hour % 12) or 12} {'AM' if hour < 12 else 'PM'}"
 
 
-class Redactor:
-    """Replaces the names of people who did not opt in with "someone"."""
+def is_ordinary_word(token: str) -> bool:
+    return token.casefold() in english_ranks() or token.casefold() in STOPWORDS
 
-    def __init__(self, hidden_names: set[str]):
-        tokens = set()
+
+def _capitalised(token: str) -> str:
+    return token[:1].upper() + token[1:].lower()
+
+
+def nicknames(name: str) -> set[str]:
+    """Capitalised prefixes of 3+ letters of a first name ("Kay", "Kayl" for
+    Kayla), leaving out ordinary words ("The" for Theodore, "Will" for William)."""
+    first = (name.split() or [""])[0]
+    if not first.isalpha():
+        return set()
+    return {_capitalised(first[:k]) for k in range(3, len(first)) if not is_ordinary_word(first[:k])}
+
+
+# A phone number (10-15 digits, with spaces, dots, dashes or brackets between
+# them) or an @-mention made of digits, as WhatsApp writes a contact without a name.
+PHONE = re.compile(r"@\+?\d+|(?<![\w@+(])(?:\+|\()?\d(?:[ ().-]{0,2}\d){9,14}(?!\d)")
+
+
+class Redactor:
+    """Replaces the names of people who did not opt in with "someone".
+
+    A name, and each 3+ letter part of it, matches in any case, except a part
+    that is an ordinary word ("Will", "Grace"), which matches only capitalised
+    so "I will" survives. Capitalised nicknames of a first name match too,
+    unless one is part of an opted-in member's name (hidden "Benjamin" doesn't
+    hide opted-in "Ben"). Phone numbers and @digits are always replaced."""
+
+    def __init__(self, hidden_names: set[str], named: set[str] = frozenset()):
+        keep = {t.casefold() for n in named for t in n.split()}
+        any_case, capitalised, nicks = set(), set(), set()
         for name in hidden_names:
-            tokens.add(name)
-            tokens.update(t for t in re.split(r"\s+", name) if len(t) >= 3)
-        self._pattern = (
-            re.compile(r"@?\b(" + "|".join(sorted(map(re.escape, tokens), key=len, reverse=True)) + r")\b", re.IGNORECASE)
-            if tokens
-            else None
-        )
+            name = name.strip()
+            if not name:
+                continue
+            for t in {name, *(t for t in name.split() if len(t) >= 3)}:
+                if " " not in t and is_ordinary_word(t):
+                    capitalised.add(_capitalised(t))
+                else:
+                    any_case.add(t)
+            nicks.update(n for n in nicknames(name) if n.casefold() not in keep)
+        alts = [(t, f"(?i:{re.escape(t)})") for t in any_case]
+        alts += [(t, re.escape(t)) for t in capitalised]
+        # A nickname must not eat the "Don" of "Don't".
+        alts += [(t, rf"{re.escape(t)}(?!['’](?:t|ll|re|ve|d|m)\b)") for t in nicks - capitalised]
+        alts.sort(key=lambda ta: (-len(ta[0]), ta[0]))
+        self._pattern = re.compile(r"@?\b(?:" + "|".join(a for _, a in alts) + r")\b") if alts else None
 
     def __call__(self, text: str) -> str:
+        text = PHONE.sub(SOMEONE, text)
         return self._pattern.sub(SOMEONE, text) if self._pattern else text
 
 
@@ -150,15 +188,17 @@ def hidden_names(messages: list[Message], named) -> set[str]:
 
 
 def name_words(messages: list[Message], named) -> set[str]:
-    """The lowercase words in everyone's names, opted in or not."""
-    return {w for n in set(named) | hidden_names(messages, named) for w in words(n)}
+    """The lowercase words in everyone's names, opted in or not, and the
+    nicknames of the people who didn't opt in."""
+    hidden = hidden_names(messages, named)
+    return {w for n in set(named) | hidden for w in words(n)} | {k.lower() for n in hidden for k in nicknames(n)}
 
 
 def compute(messages: list[Message], opted_in: set[str] | None = None) -> dict:
     messages = sorted(messages, key=lambda m: m.ts)
     authors = {m.author for m in messages}
     named = match_optins(authors, opted_in)
-    redact = Redactor(hidden_names(messages, named))
+    redact = Redactor(hidden_names(messages, named), named)
     ctx = _Context(messages, named, redact)
 
     awards = [

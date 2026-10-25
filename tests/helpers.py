@@ -16,7 +16,8 @@ def chat(*rows):
 def assert_receipts_real(test, result, messages):
     """Every receipt (and context bubble) is a real message from the input,
     up to the redaction of non-opted names."""
-    redact = Redactor(hidden_names(messages, set(result["members"])))
+    members = set(result["members"])
+    redact = Redactor(hidden_names(messages, members), members)
     real = {(m.author, m.ts.isoformat(), redact(m.text)) for m in messages}
     for award in result["awards"]:
         for key in ("receipt", "context"):

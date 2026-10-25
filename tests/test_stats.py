@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from helpers import M, assert_receipts_real, chat
-from wrapped.stats import compute, is_hype
+from wrapped.stats import Redactor, compute, is_hype
 
 ALL = {"Ana", "Ben", "Cy"}
 
@@ -275,10 +275,64 @@ class OptInTests(unittest.TestCase):
             self.assertEqual(ambiguous, [], f"seed {seed}: a case-only match with two authors names nobody")
             self.assertEqual(secrets, 0, f"seed {seed}")
 
+    def test_nickname_never_reaches_receipts_or_top_words(self):
+        from wrapped import profiles
+        rows = []
+        for i in range(6):
+            rows.append(("Kayla Brooks", f"2026-09-01 10:{i:02d}", "who is coming??"))
+            rows.append(("Ana", f"2026-09-01 10:{i:02d}:30", "lol ok Kayla, Kay is so zorbly. kay kay. @Kayla where r u"))
+        msgs = chat(*rows)
+        result = compute(msgs, {"Ana"})
+        self.assertTrue(result["awards"])
+        for a in result["awards"]:
+            self.assertEqual(a["receipt"]["text"], "lol ok someone, someone is so zorbly. kay kay. someone where r u")
+        assert_receipts_real(self, result, msgs)
+        [ana] = profiles.build(msgs, result)
+        top = {w["word"] for w in ana["top_words"]}
+        self.assertIn("zorbly", top)
+        self.assertFalse(top & {"kay", "kayla", "brooks"}, top)
+
     def test_nobody_opted_in(self):
         result = compute(self.build(), set())
         self.assertEqual(result["awards"], [])
         self.assertEqual(result["group"]["share"], {"someone": 42})
+
+
+class RedactorTests(unittest.TestCase):
+    def test_names_nicknames_and_handles(self):
+        r = Redactor({"Kayla Brooks"})
+        self.assertEqual(r("Kayla Brooks, kayla, KAYLA, Kay and Kayl, brooks"),
+                         "someone, someone, someone, someone and someone, someone")
+        self.assertEqual(r("okay kay"), "okay kay")  # nicknames only when capitalised
+
+    def test_name_that_is_an_ordinary_word_only_when_capitalised(self):
+        r = Redactor({"Will"})
+        self.assertEqual(r("I will be there, will you? I WILL"), "I will be there, will you? I WILL")
+        self.assertEqual(r("Will is late, ask @Will"), "someone is late, ask someone")
+
+    def test_nicknames_skip_ordinary_words_and_contractions(self):
+        self.assertEqual(Redactor({"Theodore"})("The party, Theo?"), "The party, someone?")
+        self.assertEqual(Redactor({"Donald"})("Don't do it, Don"), "Don't do it, someone")
+
+    def test_nickname_of_a_hidden_name_spares_an_opted_in_name(self):
+        r = Redactor({"Benjamin"}, named={"Ben"})
+        self.assertEqual(r("Ben and Benjamin and Benj"), "Ben and someone and someone")
+
+    def test_phone_numbers_and_digit_handles(self):
+        r = Redactor({"+1 (555) 123-4567"})
+        self.assertEqual(r("@15551234567 call me back 555 times!!!"), "someone call me back 555 times!!!")
+        self.assertEqual(r("text +1 (555) 123-4567 or 555-123-4567 by 2026"), "text someone or someone by 2026")
+        self.assertEqual(Redactor(set())("my number is 4805551234"), "my number is someone")
+
+    def test_phone_author_mention_never_quoted(self):
+        rows = []
+        for i in range(8):
+            rows.append(("+1 (555) 123-4567", f"2026-09-01 10:{i:02d}", "hey all?"))
+            rows.append(("Ana", f"2026-09-01 10:{i:02d}:15", "@15551234567 call me back 555 times!!!"))
+        msgs = chat(*rows)
+        blob = json.dumps(compute(msgs, {"Ana"}), ensure_ascii=False)
+        self.assertNotIn("15551234567", blob)
+        self.assertNotIn("123-4567", blob)
 
 
 if __name__ == "__main__":
