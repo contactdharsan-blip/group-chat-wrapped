@@ -163,7 +163,7 @@ def _totals_slide(n: int, group: dict) -> str:
     return _slide(n, "#000000", "#FFFFFF", body, accent="#0A84FF")
 
 
-def _award_slide(n: int, i: int, total: int, award: dict, caption: str | None = None) -> str:
+def _award_slide(n: int, i: int, total: int, award: dict) -> str:
     bg, fg = PALETTE.get(award["key"], DEFAULT)
     value = f'<div class="value">{escape(award["value_text"])}</div>'
     if award["key"] == "emoji":
@@ -202,13 +202,13 @@ def _closing_slide(n: int, result: dict) -> str:
     return _slide(n, "#000000", "#FFFFFF", body, accent="#30D158")
 
 
-def build_html(result: dict, chat_name: str = "Group Chat Wrapped", captions: dict | None = None) -> str:
+def build_html(result: dict, chat_name: str = "Group Chat Wrapped") -> str:
     awards = result["awards"]
     slides = [_title_slide(1, chat_name, result["group"])]
     if result["group"].get("messages"):
         slides.append(_totals_slide(len(slides) + 1, result["group"]))
     for i, award in enumerate(awards, 1):
-        slides.append(_award_slide(len(slides) + 1, i, len(awards), award, (captions or {}).get(award["key"])))
+        slides.append(_award_slide(len(slides) + 1, i, len(awards), award))
     slides.append(_closing_slide(len(slides) + 1, result))
     return (
         "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"

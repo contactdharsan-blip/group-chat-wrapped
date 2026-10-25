@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     caps = captions.captions(result["awards"], profiles.build(messages, result), client)
     (out / "captions.json").write_text(json.dumps(caps, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     html = out / "slides.html"
-    html.write_text(slides.build_html(result, args.name, caps["awards"]), encoding="utf-8")
+    html.write_text(slides.build_html(result, args.name), encoding="utf-8")
     print(f"{len(messages):,} messages, {len(result['awards'])} awards -> {out}/stats.json, {html}")
 
     if args.no_render:
