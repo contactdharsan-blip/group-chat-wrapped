@@ -354,7 +354,7 @@ def keychain_token() -> str:
         capture_output=True, text=True,
     )
     if proc.returncode != 0:
-        raise SystemExit("no Keychain item 'discord-bot-token' for account 'hercules' (see README, Platforms)")
+        raise SystemExit("no Keychain item 'discord-bot-token' for account 'hercules' (see README, Set up the bot)")
     return proc.stdout.strip()
 
 
@@ -368,7 +368,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         import discord  # noqa: F401
     except ImportError:
-        print("discord.py is not installed; see README, Platforms > Discord", file=sys.stderr)
+        print("discord.py is not installed; see README, Set up the bot", file=sys.stderr)
         return 1
     ai = captions.make_client() if args.claude else None
     handlers = Handlers(OptinStore(), limit=args.limit, web_url=args.web_url, caption_client=ai)

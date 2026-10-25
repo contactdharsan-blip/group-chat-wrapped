@@ -273,7 +273,7 @@ class HandlerTests(unittest.TestCase):
 
 
 @unittest.skipUnless(HAS_DISCORD, "discord.py is not installed: install it into .venv to test the bot wiring "
-                                  "(README, Platforms > Discord)")
+                                  "(README, Set up the bot)")
 class WiringTests(unittest.TestCase):
     def test_command_group_and_intents(self):
         from wrapped.platforms.discord_bot import build_bot
