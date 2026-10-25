@@ -100,8 +100,9 @@ What is guaranteed:
 - Names are split into their letter runs, so "kayla.brooks", "Kayla🌸" and "@kayla_b" all count as
   Kayla (and Brooks), and they're found in text next to dots, underscores, digits or emoji.
 - Accents don't matter: "Zoë Müller" also matches zoe, ZOË, muller and Mueller (and Mueller matches
-  Müller). A name with a letter stretched 3+ times still matches ("anaaa", "Annnaa" for Ana), but
-  "Anna" is not Ana.
+  Müller). A longer word that is a 3+ letter name with letters repeated still matches ("samm" for
+  Sam, "anaa", "Annnaa" and "Anna" for Ana), but never the other way ("Ana" isn't a hidden Anna), and
+  never an ordinary word ("been" isn't Ben, "freed" isn't Fred).
 - In a quoted message, these become "someone":
   - the name of someone who didn't opt in as written, and each 3+ letter part of it, in any case
     ("Kayla", "KAYLA", "kayla", "Kayla's");
@@ -124,12 +125,19 @@ What is guaranteed:
   `@name`, anyone else "someone". People who didn't opt in are tracked by their user id, never by their
   display name, and their nick, global name and username are all treated as their names.
 
-What isn't: redaction works from names, so a nickname that doesn't start the first name ("Bob" for
-Robert, "Will" for William), a misspelling, or a description ("her roommate") can still appear inside a
-quote from someone who opted in. It errs towards leaving messages out: a chat with a non-opted Will
-quotes nothing that says "will", a month written "Jan" is replaced when a hidden member is called
-Janet, and a 10-digit number that isn't a phone number still keeps its message out. A 9-digit national
-number with no "+" or bracket ("612 345 678") isn't caught.
+What isn't, rare and accepted:
+
+- Redaction works from names, so a nickname that doesn't start the first name ("Bob" for Robert,
+  "Will" for William), a misspelling, initials ("MK" for Mary-Kate), or a description ("her
+  roommate") can still appear inside a quote from someone who opted in.
+- 2-letter names (Mo, Bo) match only as written, never stretched, so "moooo" is quoted.
+- Short phone numbers are quoted: a 7-digit local number ("555-1234"), and a 9-digit national number
+  with no "+" or bracket ("612 345 678").
+- It errs towards leaving messages out or redacting too much: a chat with a non-opted Will quotes
+  nothing that says "will"; a month written "Jan" is replaced when a hidden member is called Janet;
+  an accent-free spelling can catch an ordinary word (hidden "Gael" also catches "gal", "Paez" catches
+  "paz", "Rafael" catches "Rafal"); and a long digit run that isn't a phone number ("2019 2020 2021
+  2022", an order number) keeps its message out.
 
 - The CLI runs locally, with no network calls and no accounts. Nothing is uploaded. The Discord bot
   and the iMessage bridge post the finished slides back into the chat they were run in, and nowhere else.
