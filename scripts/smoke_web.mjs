@@ -48,7 +48,7 @@ function start(cmd, args) {
 }
 
 async function shot(page, size, name) {
-  await page.waitForTimeout(700); // let entry springs settle
+  await page.waitForTimeout(700); // let entry animations and count-ups settle
   await page.screenshot({ path: path.join(SHOTS, `${size}-${name}.png`), fullPage: false });
 }
 
@@ -92,15 +92,23 @@ async function demoTour(browser, base, size) {
   await noHorizontalScroll(page, `${size.name} landing`);
   await page.getByTestId('add-discord').scrollIntoViewIfNeeded();
   await shot(page, size.name, '02-landing-add');
+  await page.getByTestId('dropzone').scrollIntoViewIfNeeded();
+  await shot(page, size.name, '02b-landing-upload');
 
   await page.getByTestId('demo-button').click();
   await page.getByTestId('screen-feed').waitFor();
-  const blur = await page.evaluate(() => {
-    const el = document.querySelector('.glass');
-    const cs = getComputedStyle(el);
-    return cs.backdropFilter || cs.webkitBackdropFilter;
+  const look = await page.evaluate(() => {
+    const cs = getComputedStyle(document.querySelector('[data-slot=card]'));
+    const blurred = [...document.querySelectorAll('*')].some((el) => {
+      const s = getComputedStyle(el);
+      const f = s.backdropFilter || s.webkitBackdropFilter;
+      return f && f !== 'none';
+    });
+    return { border: `${cs.borderTopWidth} ${cs.borderTopColor}`, shadow: cs.boxShadow, blurred };
   });
-  check(blur && blur !== 'none', `${size.name}: glass has a backdrop blur (${blur})`);
+  check(look.border === '2px rgb(0, 0, 0)' && /rgb\(0, 0, 0\) [1-9]\d*px [1-9]\d*px 0px/.test(look.shadow),
+    `${size.name}: cards are neobrutalist, black keyline and hard shadow (${look.border}; ${look.shadow})`);
+  check(!look.blurred, `${size.name}: nothing uses a backdrop blur`);
   check(await page.getByTestId('feed-post').count() === 11, `${size.name}: feed has 11 award posts`);
   check(await page.getByTestId('story-ring').count() === 4, `${size.name}: 4 person story rings + group`);
   await shot(page, size.name, '03-feed');
