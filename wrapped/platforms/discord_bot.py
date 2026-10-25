@@ -110,7 +110,8 @@ def to_message(dm, names: dict[str, str]) -> Message | None:
     if uid in names:
         author, aliases = names[uid], ()
     else:
-        seen = (getattr(dm.author, "display_name", None), getattr(dm.author, "name", None))
+        # display_name is nick or global_name or name, so it can hide the others: keep them all.
+        seen = (getattr(dm.author, k, None) for k in ("display_name", "nick", "global_name", "name"))
         author, aliases = f"user:{uid}", tuple(dict.fromkeys(n for n in seen if n))
     return Message(
         # created_at is aware UTC; the pipeline wants this machine's wall clock.

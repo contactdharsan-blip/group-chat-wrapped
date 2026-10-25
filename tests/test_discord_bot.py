@@ -67,6 +67,19 @@ class ConversionTests(unittest.TestCase):
         self.assertEqual(m.author, "user:12")
         self.assertIn("jordan", m.aliases)
 
+    def test_every_name_of_an_unopted_member_is_an_alias(self):
+        # discord.py's display_name is nick or global_name or name, so a nick hides the global name.
+        dm = fake_msg(1, 2, "KB", "hi")
+        dm.author.nick, dm.author.global_name, dm.author.name = "KB", "Kayla Brooks", "kbrooks99"
+        m = to_message(dm, {"1": "Maya"})
+        self.assertEqual(set(m.aliases), {"KB", "Kayla Brooks", "kbrooks99"})
+        from wrapped.stats import compute
+        maya = to_message(fake_msg(2, 1, "Maya", "Kayla are you coming?? kbrooks99?", minutes=1), {"1": "Maya"})
+        res = compute([m, maya], {"Maya"})
+        self.assertTrue(res["awards"])
+        self.assertNotIn("Kayla", str(res))
+        self.assertNotIn("kbrooks", str(res))
+
     def test_mentions_become_names_only_for_opted_in_users(self):
         dm = fake_msg(1, 11, "Maya", "<@2> and <@!3> are you coming?? ask <@11> or <@&77> in <#55>")
         m = to_message(dm, {"11": "Maya"})
