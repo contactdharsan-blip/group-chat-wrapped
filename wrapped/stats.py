@@ -233,7 +233,8 @@ class Redactor:
     Unquotable (``quotable`` is False: the award picks its next-best message
     rather than show this one mangled or leaking):
       * an ordinary-word part or nickname in any other casing ("mark", "WILL",
-        "kay"), which may be the word or the name;
+        "kay"), which may be the word or the name, and a capitalised
+        ordinary-word part opening a sentence ("Will you come?");
       * a longer word starting with a 4+ letter part ("kaylas");
       * a part that is also part of an opted-in member's name;
       * a phone number.
@@ -278,6 +279,12 @@ class Redactor:
                        rf"{_LETTER}+")
             if stems else None
         )
+        # "Will you come?": opening a sentence, a capitalised word-name may just be the word.
+        self._opening = (
+            re.compile(rf"(?:^|[.!?…\n])\s*(?:{'|'.join(map(re.escape, sorted(capitalised, key=len, reverse=True)))})"
+                       rf"(?!{_LETTER})")
+            if capitalised else None
+        )
         squeezed = lambda names: {squeeze(n.lower()) for n in names}  # noqa: E731
         self._squeezed_any, self._squeezed_shared = squeezed(any_case), squeezed(shared)
         self._squeezed_word = squeezed(capitalised | nicks)
@@ -316,6 +323,8 @@ class Redactor:
 
     def quotable(self, text: str) -> bool:
         if has_phone_number(text):
+            return False
+        if self._opening and self._opening.search(fold(text)):
             return False
         folded = fold(self(text))
         if self._unsure and self._unsure.search(folded):

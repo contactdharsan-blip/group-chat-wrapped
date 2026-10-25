@@ -387,8 +387,8 @@ class RedactorTests(unittest.TestCase):
         r = Redactor({"Will"})
         self.assertEqual(r("I will be there, will you? I WILL"), "I will be there, will you? I WILL")
         self.assertEqual(r("Will is late, ask @Will"), "someone is late, ask someone")
-        self.assertTrue(r.quotable("Will is late"))
-        for text in ("I will be there", "I WILL", "will!!!"):
+        self.assertTrue(r.quotable("ask Will about it"))
+        for text in ("I will be there", "I WILL", "will!!!", "Will you come?", "ok. Will you come?", "yes!\nWill do"):
             self.assertFalse(r.quotable(text), text)  # not mangled, and not quoted either
 
     def test_lowercase_ordinary_word_name_is_never_quoted(self):
