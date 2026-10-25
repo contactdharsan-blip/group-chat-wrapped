@@ -179,9 +179,10 @@ def nicknames(name: str) -> set[str]:
 
 # An @-mention of 7+ digits, as WhatsApp writes a contact with no name.
 _DIGIT_HANDLE = re.compile(r"@\+?\d{7,}")
-# A run of digit groups joined by single spaces, dashes or dots, the first
-# maybe after "+" and any in brackets: "+44 7911 123456", "(02) 9374 4000".
-_NUMBER_RUN = re.compile(r"(?<![\w+])\+?\(?\d+\)?(?:[ .-]\(?\d+\)?)*(?!\w)")
+# A run of digit groups joined by single spaces, dashes or dots, or by a
+# closing bracket alone, the first maybe after "+" and any in brackets:
+# "+44 7911 123456", "(02) 9374 4000", "(555)123-4567".
+_NUMBER_RUN = re.compile(r"(?<![\w+])\+?\(?\d+\)?(?:(?:[ .-]|(?<=\)))\(?\d+\)?)*(?!\w)")
 
 
 def _phone_shaped(groups: list[str], lead: str) -> bool:

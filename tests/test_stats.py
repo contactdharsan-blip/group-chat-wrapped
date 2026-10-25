@@ -471,7 +471,8 @@ class RedactorTests(unittest.TestCase):
                      # India, UK, Australia, France
                      "98765 43210", "call 098765 43210", "98765-43210", "+91 98765 43210", "07911 123456",
                      "020 7946 0958", "(02) 9374 4000", "0412 345 678", "01 23 45 67 89", "555.123.4567?",
-                     "+1 555 123 4567?", "call 2 98765 43210"):
+                     "+1 555 123 4567?", "call 2 98765 43210", "(555)123-4567", "call (555)123-4567 ok?",
+                     "(555) 123-4567", "555.123.4567"):
             self.assertFalse(r.quotable(text), text)
 
     def test_ordinary_numbers_stay_quotable_and_untouched(self):
