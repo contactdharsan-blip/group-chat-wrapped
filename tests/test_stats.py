@@ -415,10 +415,43 @@ class RedactorTests(unittest.TestCase):
     def test_stretched_names_match_their_name(self):
         r = Redactor({"Ana Lopez"})
         self.assertEqual(r("anaaa where r u?? ANAAA Annnaa"), "someone where r u?? someone someone")
-        for text in ("analysis of Anna", "banana"):  # a 3-letter name isn't a prefix rule, and nn isn't n
+        for text in ("analysis", "banana"):  # a 3-letter name isn't a prefix rule
             self.assertTrue(r.quotable(text), text)
             self.assertEqual(r(text), text)
         self.assertEqual(Redactor({"Sam"})("saaam!!!"), "someone!!!")
+
+    def test_a_doubled_letter_in_a_short_name_still_matches(self):
+        self.assertEqual(Redactor({"Sam"})("samm where r u? SAMM"), "someone where r u? someone")
+        self.assertEqual(Redactor({"Ben Ortiz"})("bennn where r u? BENN"), "someone where r u? someone")
+        for name, text in (("Ben", "I have been there. Been busy"), ("Ken", "so keen"), ("Fred", "freed at last")):
+            self.assertEqual(Redactor({name})(text), text)  # an ordinary word is never a stretched name
+            self.assertTrue(Redactor({name}).quotable(text))
+        r = Redactor({"Ana Lopez"})
+        self.assertEqual(r("anaa where r u? ANAA, Anna?"), "someone where r u? someone, someone?")
+        self.assertTrue(r.quotable("anaa where r u?"))
+        # the name has to be the shorter one: hidden "Anna" doesn't make "Ana" a name
+        self.assertEqual(Redactor({"Anna"})("Ana and Annna"), "Ana and someone")
+        # a longer spelling of a hidden name that an opted-in member has is unsure, not replaced
+        self.assertFalse(Redactor({"Ana Lopez"}, named={"Anna"}).quotable("hi Anna"))
+        # word-names keep their casing rule
+        w = Redactor({"Will"})
+        self.assertEqual(w("ask Willl"), "ask someone")
+        self.assertFalse(w.quotable("willl do"))
+        # two-letter names never match stretched interjections
+        for name, text in (("Mo", "moooo cows?"), ("Yo", "yooooo what's up?"), ("Bo", "boooo they lost?")):
+            self.assertEqual(Redactor({name})(text), text)
+            self.assertTrue(Redactor({name}).quotable(text))
+
+    def test_doubled_short_names_stay_out_of_top_words(self):
+        from wrapped import profiles
+        rows = []
+        for i in range(6):
+            rows += [("Sam", f"2026-09-01 10:{i:02d}", "hey"), ("Bea", f"2026-09-01 10:{i:02d}:10", "samm zork SAMM")]
+        msgs = chat(*rows)
+        [bea] = profiles.build(msgs, compute(msgs, {"Bea"}))
+        top = {w["word"] for w in bea["top_words"]}
+        self.assertNotIn("samm", top)
+        self.assertIn("zork", top)
 
     def test_accented_and_stretched_names_stay_out_of_top_words(self):
         from wrapped import profiles

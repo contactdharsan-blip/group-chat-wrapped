@@ -113,6 +113,14 @@ def is_ordinary_word(token: str) -> bool:
     return token.casefold() in english_ranks() or token.casefold() in STOPWORDS
 
 
+def _looks_like_a_word(token: str) -> bool:
+    """An ordinary word, or one with a common ending added: "been", "freed"."""
+    t = token.casefold()
+    return is_ordinary_word(t) or any(
+        t.endswith(end) and is_ordinary_word(t[: -len(end)]) for end in ("s", "es", "d", "ed", "ing", "er", "ly")
+    )
+
+
 def _capitalised(token: str) -> str:
     return token[:1].upper() + token[1:].lower()
 
@@ -223,9 +231,10 @@ class Redactor:
     Names are split into letter runs ("kayla.brooks" is kayla and brooks), and
     matched in text between non-letters, so "Kayla🌸" and "@kayla_b" match too.
     Accents are folded on both sides ("Zoë" is Zoe, "Müller" is Muller and
-    Mueller). A word with a letter written 3+ times in a row is compared with
-    its repeats squeezed out, so "anaaa" and "Annnaa" are Ana, and
-    "Kaylaaa" is Kayla; "Anna" (no 3+ run) is not Ana.
+    Mueller). A word longer than a 3+ letter name part that is the same with
+    repeated letters squeezed out is that part: "anaa", "Annnaa" and "Anna"
+    are Ana, "samm" is Sam, "Kaylaaa" is Kayla. Never the other way ("Ana"
+    isn't hidden Anna), and never for 2-letter names ("moooo" isn't Mo).
 
     Replaced with "someone":
       * the whole name as written, and each 3+ letter part, in any case;
@@ -286,25 +295,33 @@ class Redactor:
                        rf"(?!{_LETTER})")
             if capitalised else None
         )
-        squeezed = lambda names: {squeeze(n.lower()) for n in names}  # noqa: E731
-        self._squeezed_any, self._squeezed_shared = squeezed(any_case), squeezed(shared)
-        self._squeezed_word = squeezed(capitalised | nicks)
+        # Squeezed single-word spellings of 3+ letters -> (how sure, shortest length).
+        self._squeezed: dict[str, tuple[int, int]] = {}
+        for sure, names in ((0, any_case), (1, capitalised | nicks), (2, shared)):
+            for n in names:
+                if len(n) >= 3 and n.isalpha():
+                    key = squeeze(n.lower())
+                    old = self._squeezed.get(key, (sure, len(n)))
+                    self._squeezed[key] = (max(old[0], sure), min(old[1], len(n)))
 
     def _stretched(self, word: str) -> str | None:
-        """For a folded word with a letter 3+ times in a row: "name" if it is a
-        name, "unsure" if it may be one, else None."""
-        key = squeeze(word.lstrip("@").lower())
-        if key in self._squeezed_any:
-            return "name"
-        if key in self._squeezed_word:
-            bare = word.lstrip("@")
-            return "name" if bare[:1].isupper() and bare[1:].islower() else "unsure"
-        return "unsure" if key in self._squeezed_shared else None
+        """For a folded word: "name" if it is a hidden name written with extra
+        repeated letters, "unsure" if it may be one, else None."""
+        bare = word.lstrip("@")
+        hit = self._squeezed.get(squeeze(bare.lower()))
+        if hit is None or len(bare) <= hit[1] or _looks_like_a_word(bare):
+            return None  # exact spellings are the regex's job, a shorter one isn't the name, "been" isn't Ben
+        sure = hit[0]
+        if sure == 1:  # a word-name or nickname: only capitalised is sure
+            sure = 0 if bare[:1].isupper() and bare[1:].islower() else 2
+        if sure == 0 and bare.casefold() in self._keep:
+            sure = 2  # "Anna" when Ana didn't opt in but Anna did
+        return "name" if sure == 0 else "unsure"
 
     def _spans(self, folded: str) -> list[tuple[int, int]]:
         """Where the names are in folded text, in order, not overlapping."""
         spans = [m.span() for m in self._pattern.finditer(folded)] if self._pattern else []
-        spans += [m.span() for m in _STRETCHED_WORD.finditer(folded) if self._stretched(m.group()) == "name"]
+        spans += [m.span() for m in _WORD_RUN.finditer(folded) if self._stretched(m.group()) == "name"]
         out = []
         for a, b in sorted(spans):
             if not out or a >= out[-1][1]:
@@ -330,14 +347,14 @@ class Redactor:
         folded = fold(self(text))
         if self._unsure and self._unsure.search(folded):
             return False
-        if any(self._stretched(m.group()) == "unsure" for m in _STRETCHED_WORD.finditer(folded)):
+        if any(self._stretched(m.group()) == "unsure" for m in _WORD_RUN.finditer(folded)):
             return False
         return not (self._variant and any(m.group().casefold() not in self._keep
                                           for m in self._variant.finditer(folded)))
 
 
-# A word with one letter 3+ times in a row: "anaaa", "Kaylaaa", "@saaam".
-_STRETCHED_WORD = re.compile(rf"@?(?<!{_LETTER})(?={_LETTER}*?({_LETTER})\1\1){_LETTER}+(?!{_LETTER})")
+# A word with a letter repeated: "anaa", "Kaylaaa", "@samm".
+_WORD_RUN = re.compile(rf"@?(?<!{_LETTER})(?={_LETTER}*?({_LETTER})\1){_LETTER}+(?!{_LETTER})")
 
 
 def _between_letters(alts: list[tuple[str, str]], prefix: str = ""):
@@ -380,13 +397,15 @@ def name_matcher(messages: list[Message], named):
     """A test for lowercase words that are names, so Group Word and top words
     skip them: a word of anyone's name, opted in or not, a nickname of someone
     who didn't opt in, or a longer word starting with a 4+ letter part of
-    their name ("kaylas"). Accents are folded and stretched letters cut back
-    ("anaaa" is Ana)."""
+    their name ("kaylas"). Accents are folded, and a word that squeezes to a
+    3+ letter part of a hidden name is that name ("samm", "anaaa")."""
     hidden = hidden_names(messages, named)
     spelled = {x.lower() for n in hidden for t in name_parts(n) for x in spellings(t)}
     exact = {w for n in set(named) | hidden for w in words(n)} | spelled | {k.lower() for n in hidden for k in nicknames(n)}
     stems = tuple(x for x in spelled | {w for n in hidden for w in words(n)} if len(squeeze(x)) >= 4)
-    return lambda w: any(c in exact or c.startswith(stems) for c in _unstretched(w))
+    squeezed = {squeeze(x) for x in spelled}
+    return lambda w: (any(c in exact or c.startswith(stems) for c in _unstretched(w))
+                      or squeeze(w) in squeezed)
 
 
 def compute(messages: list[Message], opted_in: set[str] | None = None) -> dict:
