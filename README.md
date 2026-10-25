@@ -99,19 +99,26 @@ What is guaranteed:
   has it, so a "maya" never inherits "Maya"'s consent.
 - Names are split into their letter runs, so "kayla.brooks", "Kayla🌸" and "@kayla_b" all count as
   Kayla (and Brooks), and they're found in text next to dots, underscores, digits or emoji.
+- Accents don't matter: "Zoë Müller" also matches zoe, ZOË, muller and Mueller (and Mueller matches
+  Müller). A name with a letter stretched 3+ times still matches ("anaaa", "Annnaa" for Ana), but
+  "Anna" is not Ana.
 - In a quoted message, these become "someone":
   - the name of someone who didn't opt in as written, and each 3+ letter part of it, in any case
     ("Kayla", "KAYLA", "kayla", "Kayla's");
-  - a part that is an ordinary English word ("Will", "Mark", "Grace") when capitalised;
+  - a part that is an ordinary English word ("Will", "Mark", "Grace") when capitalised, mid-sentence;
   - capitalised nicknames that start their first name ("Kay" for Kayla), except ordinary words and
     parts of opted-in names.
 - These make a message unquotable, because "someone" would be a guess:
   - an ordinary-word part or a nickname in any other casing ("mark", "WILL", "kay"), so "I will be
     there" is neither mangled nor quoted when a Will didn't opt in;
+  - a capitalised ordinary-word part opening a sentence ("Will you come?");
   - a longer word that starts with a 4+ letter part ("kaylas", "Kaylaaa");
   - a name part that an opted-in member's name shares;
-  - a phone number: +country groups, (555) 123-4567 with single separators, a run of 10 to 15 digits,
-    or an @-mention of 7+ digits. Other numbers ("@7pm", "100 100 100") are quoted as written.
+  - a phone number, by shape: 10 to 15 digits (9 after "+" or a bracket) in groups joined by single
+    spaces, dashes, dots or brackets, groups of 2+ digits ending in one of 3+ ("98765 43210",
+    "07911 123456", "020 7946 0958", "(02) 9374 4000", "+1 555 123 4567"), or an @-mention of 7+
+    digits. Other numbers ("@7pm", "100 100 100 100", countdowns, decimals, dates, zip+4, ISBNs) are
+    quoted as written.
 - Profile top words and the Group Word never use those names, nicknames or longer variants.
 - Discord: a mention (`<@id>`) is resolved when the message is read: someone who opted in becomes
   `@name`, anyone else "someone". People who didn't opt in are tracked by their user id, never by their
@@ -121,7 +128,8 @@ What isn't: redaction works from names, so a nickname that doesn't start the fir
 Robert, "Will" for William), a misspelling, or a description ("her roommate") can still appear inside a
 quote from someone who opted in. It errs towards leaving messages out: a chat with a non-opted Will
 quotes nothing that says "will", a month written "Jan" is replaced when a hidden member is called
-Janet, and a 10-digit number that isn't a phone number still keeps its message out.
+Janet, and a 10-digit number that isn't a phone number still keeps its message out. A 9-digit national
+number with no "+" or bracket ("612 345 678") isn't caught.
 
 - The CLI runs locally, with no network calls and no accounts. Nothing is uploaded. The Discord bot
   and the iMessage bridge post the finished slides back into the chat they were run in, and nowhere else.
