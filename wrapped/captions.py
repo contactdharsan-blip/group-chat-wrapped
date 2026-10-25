@@ -20,6 +20,8 @@ import json
 import re
 import subprocess
 
+from .stats import plural
+
 try:  # optional: templates work without the SDK
     import anthropic
 except ImportError:  # pragma: no cover - depends on the environment
@@ -54,7 +56,7 @@ Rules:
 - "someone" stands for a person who did not opt in; never guess who it is.
 Return JSON matching the schema, one entry per award key, and one bio per member."""
 
-BIO_TEMPLATE = "{messages} messages, mostly around {peak}. {awards}"
+BIO_TEMPLATE = "{messages}, mostly around {peak}. {awards}"
 
 CAPTION_SCHEMA = {
     "type": "object",
@@ -101,7 +103,7 @@ def template_bio(profile: dict) -> str:
     else:
         awards = "Here for the chat, not the trophies."
     peak = profile["peak_hour"] or "all hours"
-    return BIO_TEMPLATE.format(messages=f"{profile['messages']:,}", peak=peak, awards=awards)
+    return BIO_TEMPLATE.format(messages=plural(profile["messages"], "message"), peak=peak, awards=awards)
 
 
 def templates(awards: list[dict], profiles: list[dict]) -> dict:

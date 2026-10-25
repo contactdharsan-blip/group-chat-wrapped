@@ -158,6 +158,10 @@ class CaptionTests(unittest.TestCase):
         for p in self.people:
             self.assertIn(f"{p['messages']:,}", caps["bios"][p["name"]])
 
+    def test_template_bio_singular(self):
+        bio = captions.template_bio({"messages": 1, "peak_hour": "3 PM", "awards": []})
+        self.assertTrue(bio.startswith("1 message, mostly around 3 PM."), bio)
+
     def test_request_shape_and_nothing_hidden_is_sent(self):
         body = json.dumps({"captions": [], "bios": []})
         client, create = fake_client(response(body))
