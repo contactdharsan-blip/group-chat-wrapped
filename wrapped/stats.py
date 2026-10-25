@@ -124,11 +124,26 @@ class Redactor:
 
 # ----------------------------------------------------------------- compute ---
 
+def match_optins(authors, opted_in) -> set[str]:
+    """The authors the opt-in names pick out. An exact name always matches; a
+    different case matches only when exactly one author has it, so one
+    person's consent never passes to a case-variant of their name."""
+    authors = sorted(authors)
+    named = set()
+    for n in sorted(n.strip() for n in (opted_in or ()) if n.strip()):
+        if n in authors:
+            named.add(n)
+            continue
+        same = [a for a in authors if a.casefold() == n.casefold()]
+        if len(same) == 1:
+            named.add(same[0])
+    return named
+
+
 def compute(messages: list[Message], opted_in: set[str] | None = None) -> dict:
     messages = sorted(messages, key=lambda m: m.ts)
     authors = {m.author for m in messages}
-    by_fold = {a.casefold(): a for a in authors}
-    named = {by_fold[n.strip().casefold()] for n in (opted_in or set()) if n.strip().casefold() in by_fold}
+    named = match_optins(authors, opted_in)
     redact = Redactor(authors - named)
     ctx = _Context(messages, named, redact)
 

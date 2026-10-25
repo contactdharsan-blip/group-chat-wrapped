@@ -25,9 +25,10 @@ def main(argv: list[str] | None = None) -> int:
     opted = {n.strip() for n in args.optin.split(",") if n.strip()}
     messages = importers.load(args.chat, args.format)
     result = stats.compute(messages, opted)
-    unknown = sorted(n for n in opted if n.casefold() not in {m.author.casefold() for m in messages})
+    authors = {m.author for m in messages}
+    unknown = sorted(n for n in opted if not stats.match_optins(authors, {n}))
     if unknown:
-        print(f"note: opted-in names not found in the chat: {', '.join(unknown)}", file=sys.stderr)
+        print(f"note: opted-in names not found in the chat (or matching two names that differ only in case): {', '.join(unknown)}", file=sys.stderr)
     if not result["members"]:
         print("note: nobody opted in, so there are no awards (pass --optin \"Name,Name\")", file=sys.stderr)
 

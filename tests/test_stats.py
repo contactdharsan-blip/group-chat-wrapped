@@ -1,5 +1,9 @@
 import json
+import os
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 
 from helpers import M, assert_receipts_real, chat
 from wrapped.stats import compute, is_hype
@@ -246,6 +250,30 @@ class OptInTests(unittest.TestCase):
         self.assertEqual(result["group"]["messages"], 42)
         self.assertEqual(result["group"]["share"]["someone"], 30)
         assert_receipts_real(self, result, msgs)
+
+    def test_case_variant_never_inherits_consent(self):
+        # "Maya" opted in; "maya" is someone else who didn't. Set iteration
+        # order depends on the hash seed, so check under several seeds.
+        code = (
+            "import json\n"
+            "from helpers import chat\n"
+            "from wrapped.stats import compute\n"
+            "msgs = chat(('maya', '2026-09-01 12:05', 'secret one?'), ('maya', '2026-09-01 12:06', 'secret two?'),\n"
+            "            ('Maya', '2026-09-01 12:07', 'public'), ('Leo', '2026-09-01 12:08', 'ok'))\n"
+            "r = compute(msgs, {'Maya', 'Leo'})\n"
+            "amb = compute(msgs, {'MAYA'})\n"
+            "print(json.dumps([r['members'], amb['members'], json.dumps(r).count('secret')]))\n"
+        )
+        here = Path(__file__).resolve().parent
+        for seed in range(8):
+            env = dict(os.environ, PYTHONHASHSEED=str(seed), PYTHONDONTWRITEBYTECODE="1",
+                       PYTHONPATH=os.pathsep.join([str(here), str(here.parent)]))
+            proc = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env, timeout=60)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            members, ambiguous, secrets = json.loads(proc.stdout)
+            self.assertEqual(members, ["Leo", "Maya"], f"seed {seed}")
+            self.assertEqual(ambiguous, [], f"seed {seed}: a case-only match with two authors names nobody")
+            self.assertEqual(secrets, 0, f"seed {seed}")
 
     def test_nobody_opted_in(self):
         result = compute(self.build(), set())
