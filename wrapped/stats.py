@@ -116,12 +116,19 @@ def _capitalised(token: str) -> str:
     return token[:1].upper() + token[1:].lower()
 
 
+_NAME_PART = re.compile(r"[^\W\d_]+")  # a run of letters: names split on dots, digits, emoji...
+_LETTER = r"[^\W\d_]"
+
+
+def name_parts(name: str) -> list[str]:
+    """"kayla.brooks", "Kayla🌸" and "@kayla_b" split into their letter runs."""
+    return _NAME_PART.findall(name)
+
+
 def nicknames(name: str) -> set[str]:
     """Capitalised prefixes of 3+ letters of a first name ("Kay", "Kayl" for
     Kayla), leaving out ordinary words ("The" for Theodore, "Will" for William)."""
-    first = (name.split() or [""])[0]
-    if not first.isalpha():
-        return set()
+    first = (name_parts(name) or [""])[0]
     return {_capitalised(first[:k]) for k in range(3, len(first)) if not is_ordinary_word(first[:k])}
 
 
@@ -137,43 +144,80 @@ PHONE = re.compile(
 
 
 class Redactor:
-    """Replaces the names of people who did not opt in with "someone".
+    """Replaces the names of people who did not opt in with "someone", and says
+    which messages can't be cleaned that way.
 
-    A name, and each 3+ letter part of it, matches in any case, except a part
-    that is an ordinary word ("Will", "Grace"), which matches only capitalised
-    so "I will" survives. Capitalised nicknames of a first name match too,
-    unless one is part of an opted-in member's name (hidden "Benjamin" doesn't
-    hide opted-in "Ben").
+    Names are split into letter runs ("kayla.brooks" is kayla and brooks), and
+    matched in text between non-letters, so "Kayla🌸" and "@kayla_b" match too.
 
-    A message it can't clean without guessing isn't rewritten: ``quotable``
-    says no, and the award picks its next-best message. A phone number makes a
-    message unquotable."""
+    Replaced with "someone":
+      * the whole name as written, and each 3+ letter part, in any case;
+      * a part that is an ordinary word ("Will", "Grace") only capitalised;
+      * capitalised nicknames of the first name ("Kay" for Kayla).
+    Unquotable (``quotable`` is False: the award picks its next-best message
+    rather than show this one mangled or leaking):
+      * an ordinary-word part or nickname in any other casing ("mark", "WILL",
+        "kay"), which may be the word or the name;
+      * a longer word starting with a 4+ letter part ("kaylas", "Kaylaaa");
+      * a part that is also part of an opted-in member's name;
+      * a phone number.
+    A nickname that is part of an opted-in name is left alone (hidden
+    "Benjamin" doesn't hide opted-in "Ben")."""
 
     def __init__(self, hidden_names: set[str], named: set[str] = frozenset()):
-        keep = {t.casefold() for n in named for t in n.split()}
-        any_case, capitalised, nicks = set(), set(), set()
+        self._keep = keep = {t.casefold() for n in named for t in name_parts(n)}
+        any_case, capitalised, nicks, shared, stems = set(), set(), set(), set(), set()
         for name in hidden_names:
             name = name.strip()
-            if not name:
-                continue
-            for t in {name, *(t for t in name.split() if len(t) >= 3)}:
-                if " " not in t and is_ordinary_word(t):
+            parts = [t for t in name_parts(name) if len(t) >= 3]
+            if name and (len(name_parts(name)) != 1 or not parts or name != parts[0]):
+                any_case.add(name)  # the name as written: "Kayla Brooks", "kayla.brooks", "Al"
+            for t in parts:
+                if t.casefold() in keep:
+                    shared.add(t)
+                elif is_ordinary_word(t):
                     capitalised.add(_capitalised(t))
                 else:
                     any_case.add(t)
+                    if len(t) >= 4:
+                        stems.add(t)
             nicks.update(n for n in nicknames(name) if n.casefold() not in keep)
+        nicks -= capitalised
+        # A nickname must not eat the "Don" of "Don't".
+        guard = r"(?!['’](?:t|ll|re|ve|d|m)\b)"
         alts = [(t, f"(?i:{re.escape(t)})") for t in any_case]
         alts += [(t, re.escape(t)) for t in capitalised]
-        # A nickname must not eat the "Don" of "Don't".
-        alts += [(t, rf"{re.escape(t)}(?!['’](?:t|ll|re|ve|d|m)\b)") for t in nicks - capitalised]
-        alts.sort(key=lambda ta: (-len(ta[0]), ta[0]))
-        self._pattern = re.compile(r"@?\b(?:" + "|".join(a for _, a in alts) + r")\b") if alts else None
+        alts += [(t, re.escape(t) + guard) for t in nicks]
+        self._pattern = _between_letters(alts, prefix="@?")
+        # Run on text already cleaned, where any match left is a casing that wasn't replaced.
+        self._unsure = _between_letters(
+            [(t, f"(?i:{re.escape(t)})") for t in capitalised | shared]
+            + [(t, f"(?i:{re.escape(t)}){guard}") for t in nicks]
+        )
+        self._variant = (
+            re.compile(rf"(?<!{_LETTER})(?i:{'|'.join(map(re.escape, sorted(stems, key=len, reverse=True)))}){_LETTER}+")
+            if stems else None
+        )
 
     def __call__(self, text: str) -> str:
         return self._pattern.sub(SOMEONE, text) if self._pattern else text
 
     def quotable(self, text: str) -> bool:
-        return not PHONE.search(text)
+        if PHONE.search(text):
+            return False
+        text = self(text)
+        if self._unsure and self._unsure.search(text):
+            return False
+        return not (self._variant and any(m.group().casefold() not in self._keep for m in self._variant.finditer(text)))
+
+
+def _between_letters(alts: list[tuple[str, str]], prefix: str = ""):
+    """One pattern for the alternatives, longest first, each matched only
+    between non-letters, or None when there are none."""
+    if not alts:
+        return None
+    alts = sorted(alts, key=lambda ta: (-len(ta[0]), ta[0]))
+    return re.compile(rf"{prefix}(?<!{_LETTER})(?:" + "|".join(a for _, a in alts) + rf")(?!{_LETTER})")
 
 
 # ----------------------------------------------------------------- compute ---
@@ -203,11 +247,15 @@ def hidden_names(messages: list[Message], named) -> set[str]:
     return {n for a, names in aliases.items() if a not in named for n in (names or {a})}
 
 
-def name_words(messages: list[Message], named) -> set[str]:
-    """The lowercase words in everyone's names, opted in or not, and the
-    nicknames of the people who didn't opt in."""
+def name_matcher(messages: list[Message], named):
+    """A test for lowercase words that are names, so Group Word and top words
+    skip them: a word of anyone's name, opted in or not, a nickname of someone
+    who didn't opt in, or a longer word starting with a 4+ letter part of
+    their name ("kaylas", "kaylaaa")."""
     hidden = hidden_names(messages, named)
-    return {w for n in set(named) | hidden for w in words(n)} | {k.lower() for n in hidden for k in nicknames(n)}
+    exact = {w for n in set(named) | hidden for w in words(n)} | {k.lower() for n in hidden for k in nicknames(n)}
+    stems = tuple(w for n in hidden for w in words(n) if len(w) >= 4)
+    return lambda w: w in exact or w.startswith(stems)
 
 
 def compute(messages: list[Message], opted_in: set[str] | None = None) -> dict:
@@ -564,7 +612,7 @@ def _emoji(ctx):
 
 
 def _group_word(ctx):
-    name_tokens = name_words(ctx.messages, ctx.named)
+    is_name = name_matcher(ctx.messages, ctx.named)
     counts: Counter[str] = Counter()
     users: dict[str, set[str]] = defaultdict(set)
     total = 0
@@ -586,7 +634,7 @@ def _group_word(ctx):
         and "'" not in word
         and word not in STOPWORDS
         and word not in CHAT_SLANG
-        and word not in name_tokens
+        and not is_name(word)
         and not OMW.fullmatch(word)
     }
     if not candidates:

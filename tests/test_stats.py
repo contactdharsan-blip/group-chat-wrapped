@@ -336,12 +336,13 @@ class OptInTests(unittest.TestCase):
         rows = []
         for i in range(6):
             rows.append(("Kayla Brooks", f"2026-09-01 10:{i:02d}", "who is coming??"))
-            rows.append(("Ana", f"2026-09-01 10:{i:02d}:30", "lol ok Kayla, Kay is so zorbly. kay kay. @Kayla where r u"))
+            rows.append(("Ana", f"2026-09-01 10:{i:02d}:30", "lol ok Kayla, Kay is so zorbly. @Kayla where r u"))
+            rows.append(("Ana", f"2026-09-01 10:{i:02d}:40", "kay kay KAY zorbly zorbly zorbly zorbly zorbly zorbly zorbly zorbly zorbly!!!"))
         msgs = chat(*rows)
         result = compute(msgs, {"Ana"})
         self.assertTrue(result["awards"])
         for a in result["awards"]:
-            self.assertEqual(a["receipt"]["text"], "lol ok someone, someone is so zorbly. kay kay. someone where r u")
+            self.assertEqual(a["receipt"]["text"], "lol ok someone, someone is so zorbly. someone where r u")
         assert_receipts_real(self, result, msgs)
         [ana] = profiles.build(msgs, result)
         top = {w["word"] for w in ana["top_words"]}
@@ -354,21 +355,80 @@ class OptInTests(unittest.TestCase):
         self.assertEqual(result["group"]["share"], {"someone": 42})
 
 
+class NameVariantTests(unittest.TestCase):
+    def test_top_words_and_group_word_skip_name_variants(self):
+        from wrapped import profiles
+        rows = []
+        for i in range(20):
+            rows += [("Ana", f"2026-09-01 10:{i:02d}", "zork with kayla and kaylas kaylaaa crew tonight?"),
+                     ("Ben", f"2026-09-01 10:{i:02d}:20", "kayla kaylas zork kaylaaa yes"),
+                     ("Kayla Brooks", f"2026-09-01 10:{i:02d}:40", "hi")]
+        rows += [("Ana", "2026-09-02 10:00", "zork tonight"), ("Ben", "2026-09-02 10:01", "zork zork")]
+        msgs = chat(*rows)
+        result = compute(msgs, {"Ana", "Ben"})
+        people = profiles.build(msgs, result)
+        blob = json.dumps([result, people]).lower()
+        self.assertNotIn("kayla", blob)
+        self.assertEqual(award(result, "group_word")["word"], "zork")
+        self.assertIn("zork", {w["word"] for w in people[0]["top_words"]})
+
+
 class RedactorTests(unittest.TestCase):
     def test_names_nicknames_and_handles(self):
         r = Redactor({"Kayla Brooks"})
         self.assertEqual(r("Kayla Brooks, kayla, KAYLA, Kay and Kayl, brooks"),
                          "someone, someone, someone, someone and someone, someone")
-        self.assertEqual(r("okay kay"), "okay kay")  # nicknames only when capitalised
+        self.assertEqual(r("okay kay"), "okay kay")  # nicknames are replaced only when capitalised...
+        self.assertFalse(r.quotable("okay kay"))  # ...and any other casing makes the message unquotable
+        self.assertFalse(r.quotable("kay where are you?? KAY come on!!!"))
+        self.assertTrue(r.quotable("Kay where are you?? KAYLA!!!"))
 
     def test_name_that_is_an_ordinary_word_only_when_capitalised(self):
         r = Redactor({"Will"})
         self.assertEqual(r("I will be there, will you? I WILL"), "I will be there, will you? I WILL")
         self.assertEqual(r("Will is late, ask @Will"), "someone is late, ask someone")
+        self.assertTrue(r.quotable("Will is late"))
+        for text in ("I will be there", "I WILL", "will!!!"):
+            self.assertFalse(r.quotable(text), text)  # not mangled, and not quoted either
+
+    def test_lowercase_ordinary_word_name_is_never_quoted(self):
+        rows = []
+        for i in range(6):
+            rows += [("Mark", f"2026-09-01 10:{i:02d}", "hey?"),
+                     ("Ana", f"2026-09-01 10:{i:02d}:10", "mark said he would come?? mark pls"),
+                     ("Ana", f"2026-09-01 10:{i:02d}:20", "see you Mark"),
+                     ("Ben", f"2026-09-01 10:{i:02d}:30", "GRACE YOUNG!!! grace young")]
+        msgs = chat(*rows) + chat(*[("Grace Young", f"2026-09-02 10:0{i}", "hi") for i in range(3)])
+        result = compute(msgs, {"Ana", "Ben"})
+        blob = json.dumps(result).lower()
+        self.assertNotIn("mark", blob)
+        self.assertNotIn("grace", blob)
+        self.assertIn("see you someone", blob)
+        assert_receipts_real(self, result, msgs)
+
+    def test_name_shared_with_an_opted_in_member_is_never_quoted(self):
+        r = Redactor({"maya"}, named={"Maya"})
+        self.assertFalse(r.quotable("hi Maya"))
+        self.assertTrue(r.quotable("hi Leo"))
 
     def test_nicknames_skip_ordinary_words_and_contractions(self):
         self.assertEqual(Redactor({"Theodore"})("The party, Theo?"), "The party, someone?")
         self.assertEqual(Redactor({"Donald"})("Don't do it, Don"), "Don't do it, someone")
+
+    def test_names_glued_to_punctuation_or_emoji(self):
+        for hidden in ("kayla.brooks", "Kayla\U0001F338", "~ Kayla", "kayla_b"):
+            r = Redactor({hidden})
+            self.assertEqual(r("Kayla where are you?? kayla!!!"), "someone where are you?? someone!!!", hidden)
+        r = Redactor({"kayla_b"})
+        self.assertEqual(r("@kayla_b and Kayla\U0001F338"), "someone and someone\U0001F338")
+        self.assertEqual(Redactor({"kayla.brooks"})("BROOKS?"), "someone?")
+
+    def test_variants_of_a_name_are_never_quoted(self):
+        r = Redactor({"Kayla Brooks"})
+        self.assertFalse(r.quotable("kaylas crew"))
+        self.assertFalse(r.quotable("Kaylaaa!!!"))
+        self.assertTrue(r.quotable("Kayla's party, Brooks's dog"))
+        self.assertEqual(r("Kayla's party, Brooks's dog"), "someone's party, someone's dog")
 
     def test_nickname_of_a_hidden_name_spares_an_opted_in_name(self):
         r = Redactor({"Benjamin"}, named={"Ben"})

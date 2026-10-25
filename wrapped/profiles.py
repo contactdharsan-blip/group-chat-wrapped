@@ -13,7 +13,7 @@ import re
 from collections import Counter
 
 from .model import Message
-from .stats import CHAT_SLANG, EMOJI, STOPWORDS, english_ranks, fmt_hour, name_words, words
+from .stats import CHAT_SLANG, EMOJI, STOPWORDS, english_ranks, fmt_hour, name_matcher, words
 
 TOP_WORDS = 5
 TOP_EMOJI = 3
@@ -41,7 +41,7 @@ def _reactions(by_key: dict, receipt: dict) -> dict[str, int]:
 
 def build(messages: list[Message], result: dict) -> list[dict]:
     members = list(result["members"])
-    name_tokens = name_words(messages, members)
+    is_name = name_matcher(messages, members)
     by_key = {(m.author, m.ts.isoformat()): m for m in messages}
     ranks = english_ranks()
     mine: dict[str, list[Message]] = {name: [] for name in members}
@@ -57,7 +57,7 @@ def build(messages: list[Message], result: dict) -> list[dict]:
         emoji = Counter(e for m in msgs for e in EMOJI.findall(m.text))
         vocab = Counter(
             w for m in msgs for w in words(m.text)
-            if len(w) >= 3 and w not in STOPWORDS and w not in CHAT_SLANG and w not in name_tokens and "'" not in w
+            if len(w) >= 3 and w not in STOPWORDS and w not in CHAT_SLANG and not is_name(w) and "'" not in w
             and ranks.get(w, COMMON_ENGLISH + 1) > COMMON_ENGLISH
         )
         awards, posts = [], []
