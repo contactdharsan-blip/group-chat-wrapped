@@ -53,6 +53,7 @@ export function Group({ data, onProfile }: { data: Wrapped; onProfile: (n: strin
               <p className="mt-2 font-head text-5xl leading-none">{heroText(word)}</p>
               <p className="mt-3 text-sm font-medium"><CountValue text={word.value_text} /></p>
               <p className="mt-1 text-xs">{word.detail}</p>
+              <div className="mt-3"><Bubble r={word.receipt} lines={2} size="text-sm" onFill /></div>
             </motion.article>
           )}
           {day && (
