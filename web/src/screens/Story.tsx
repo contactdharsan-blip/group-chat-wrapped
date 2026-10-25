@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { Pause, Play, RotateCcw, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Award, Profile, Wrapped } from '../types';
-import { Avatar, Bubble, CountValue } from '../components/bits';
+import { Avatar, Bubble, CountValue, PeopleColors } from '../components/bits';
 import { useMotionSafe } from '../motion';
-import { KICKERS, heroText, shortDate, tint } from '../util';
+import { KICKERS, heroText, shortDate, slidePop } from '../util';
+import { Card } from '@/components/ui/card';
 
 const SLIDE_MS = 5000;
 
@@ -30,13 +31,6 @@ export function buildDeck(data: Wrapped, who: string | null): Slide[] {
   return deck;
 }
 
-function slideTint(s: Slide): [string, string] {
-  if (s.kind === 'award') return tint(s.a.key);
-  if (s.kind === 'totals') return ['56, 189, 248', '167, 139, 250'];
-  if (s.kind === 'closing') return ['232, 121, 249', '56, 189, 248'];
-  return ['124, 58, 237', '232, 121, 249'];
-}
-
 function receiptSize(text: string): { size: string; lines: number } {
   const n = text.length;
   if (n <= 90) return { size: 'text-[17px]', lines: 5 };
@@ -50,10 +44,10 @@ function SlideBody({ s, data }: { s: Slide; data: Wrapped }) {
     const range = g.first && g.last ? `${shortDate(g.first)} – ${shortDate(g.last)}` : '';
     return (
       <div className="flex h-full flex-col justify-end gap-4 pb-6">
-        <p className="text-sm font-semibold text-slate-300">{data.chat_name}</p>
-        <h2 className="font-display text-[44px] font-extrabold leading-[0.95]">Your group chat, <span className="bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent">wrapped.</span></h2>
-        <p className="text-lg font-medium text-slate-200">{range}<br /><CountValue text={`${g.messages.toLocaleString('en-US')} messages`} /></p>
-        <p className="text-sm text-slate-400">Only friends who opted in are named. Every award quotes a real message.</p>
+        <p className="text-sm font-bold">{data.chat_name}</p>
+        <h2 className="text-[44px] leading-[0.95]">Your group chat, <span className="mt-2 inline-block -rotate-2 rounded-md border-[3px] border-black bg-white px-2 pb-1 text-black shadow-md">wrapped.</span></h2>
+        <p className="text-lg font-bold">{range}<br /><CountValue text={`${g.messages.toLocaleString('en-US')} messages`} /></p>
+        <p className="text-sm font-medium">Only friends who opted in are named. Every award quotes a real message.</p>
       </div>
     );
   }
@@ -63,17 +57,17 @@ function SlideBody({ s, data }: { s: Slide; data: Wrapped }) {
     ];
     return (
       <div className="flex h-full flex-col gap-5 pt-6">
-        <p className="text-sm font-semibold text-slate-300">The semester in numbers</p>
-        <h2 className="font-display text-4xl font-extrabold leading-none">You did <span className="text-sky-300">not</span> stop talking.</h2>
+        <p className="text-sm font-bold">The semester in numbers</p>
+        <h2 className="text-4xl leading-none">You did <span className="underline decoration-[5px] underline-offset-4">not</span> stop talking.</h2>
         <div className="mt-2 grid grid-cols-2 gap-3">
           {cells.map(([v, l]) => (
-            <div key={l} className="glass p-3">
-              <p className="font-display text-3xl font-extrabold leading-none"><CountValue text={v} /></p>
-              <p className="mt-1 text-xs text-slate-300">{l}</p>
+            <div key={l} className="slide-cell p-3">
+              <p className="font-head text-3xl leading-none"><CountValue text={v} /></p>
+              <p className="mt-1 text-xs font-medium">{l}</p>
             </div>
           ))}
         </div>
-        <p className="mt-auto pb-4 text-sm text-slate-300">Busiest on {g.busiest_weekday}s.</p>
+        <p className="mt-auto pb-4 text-sm font-bold">Busiest on {g.busiest_weekday}s.</p>
       </div>
     );
   }
@@ -83,11 +77,11 @@ function SlideBody({ s, data }: { s: Slide; data: Wrapped }) {
       <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
         <Avatar m={p} size={112} ring />
         <div>
-          <h2 className="font-display text-4xl font-extrabold leading-none">{p.name}</h2>
-          <p className="mt-1 text-sm text-slate-300">{p.handle}</p>
+          <h2 className="text-4xl leading-none">{p.name}</h2>
+          <p className="mt-1 text-sm font-medium">{p.handle}</p>
         </div>
-        <p className="max-w-[18rem] text-[15px] leading-relaxed text-slate-200">{data.captions.bios[p.name]}</p>
-        <p className="font-mono text-xs text-slate-400">
+        <p className="slide-cell max-w-[18rem] px-4 py-3 text-[15px] leading-relaxed">{data.captions.bios[p.name]}</p>
+        <p className="font-mono text-xs font-bold">
           {p.awards.length ? `${p.awards.length} award${p.awards.length > 1 ? 's' : ''} this semester` : 'No awards this time. Next semester.'}
         </p>
       </div>
@@ -98,9 +92,9 @@ function SlideBody({ s, data }: { s: Slide; data: Wrapped }) {
     const who = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0] ?? 'everyone';
     return (
       <div className="flex h-full flex-col justify-end gap-4 pb-6">
-        <p className="text-sm font-semibold text-slate-300">That’s a wrap</p>
-        <h2 className="font-display text-[44px] font-extrabold leading-[0.95]">Same chat, <span className="text-fuchsia-300">next semester.</span></h2>
-        <p className="text-lg text-slate-200">Starring {who}.</p>
+        <p className="text-sm font-bold">That’s a wrap</p>
+        <h2 className="text-[44px] leading-[0.95]">Same chat, <span className="mt-2 inline-block rotate-1 rounded-md border-[3px] border-black bg-white px-2 pb-1 text-black shadow-md">next semester.</span></h2>
+        <p className="text-lg font-bold">Starring {who}.</p>
       </div>
     );
   }
@@ -109,16 +103,16 @@ function SlideBody({ s, data }: { s: Slide; data: Wrapped }) {
   const rs = receiptSize(a.receipt.text);
   return (
     <div className="flex h-full flex-col">
-      <p className="font-mono text-xs text-slate-300">Award {s.i} of {s.n}</p>
-      <h2 className="mt-2 font-display text-[34px] font-extrabold leading-none">{a.title}</h2>
-      <p className="mt-1 text-sm font-medium text-slate-300">{KICKERS[a.key]}</p>
-      <p className={`mt-4 font-display font-extrabold leading-none ${big.length > 9 ? 'text-5xl' : 'text-6xl'} break-words`}>{big}</p>
-      <p className="mt-3 text-base leading-snug text-slate-100"><CountValue text={a.value_text} /></p>
+      <p className="font-mono text-xs font-bold">Award {s.i} of {s.n}</p>
+      <h2 className="mt-2 text-[34px] leading-none">{a.title}</h2>
+      <p className="mt-1 text-sm font-bold">{KICKERS[a.key]}</p>
+      <p className={`mt-4 font-head leading-none ${big.length > 9 ? 'text-5xl' : 'text-6xl'} break-words`}>{big}</p>
+      <p className="mt-3 text-base font-medium leading-snug"><CountValue text={a.value_text} /></p>
       <div className="mt-auto space-y-2 pb-2">
-        {a.detail && <p className="text-[13px] text-slate-300">{a.detail}</p>}
-        {a.context && <Bubble r={a.context} lines={2} size="text-[13px]" expandable={false} />}
-        <Bubble r={a.receipt} reply={!!a.context} lines={rs.lines} size={rs.size} expandable={false} />
-        <p className="pt-1 text-[13px] italic leading-snug text-violet-100/90">{data.captions.awards[a.key]}</p>
+        {a.detail && <p className="text-[13px] font-medium">{a.detail}</p>}
+        {a.context && <Bubble r={a.context} lines={2} size="text-[13px]" expandable={false} onFill />}
+        <Bubble r={a.receipt} reply={!!a.context} lines={rs.lines} size={rs.size} expandable={false} onFill />
+        <p className="pt-1 text-[13px] font-medium italic leading-snug">{data.captions.awards[a.key]}</p>
       </div>
     </div>
   );
@@ -184,7 +178,8 @@ export function Story({ data, who, onClose }: { data: Wrapped; who: string | nul
   };
 
   const s = deck[idx];
-  const [c1, c2] = slideTint(s);
+  // Colour-blocked slides: one pop per slide, in rotation. A person's deck starts on their colour.
+  const base = useContext(PeopleColors).get(who ?? '') ?? 0;
   const side = s.kind === 'award' ? s.a : null;
   const title = who ? `${who}'s story` : `${data.chat_name}`;
 
@@ -192,12 +187,11 @@ export function Story({ data, who, onClose }: { data: Wrapped; who: string | nul
     <section data-testid="screen-story" className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-4 pb-32 pt-4 md:flex-row md:items-start md:justify-center md:pt-8">
       <div
         className="phone flex-none"
-        style={{ ['--slide-rgb' as string]: c1, ['--slide-rgb-2' as string]: c2 }}
+        style={slidePop(base + idx)}
         data-testid="phone"
         data-slide={idx}
         data-slides={deck.length}
       >
-        <div className="phone-glow" aria-hidden="true" />
         <div className="absolute inset-x-3 top-3 z-20 flex gap-1" aria-hidden="true">
           {deck.map((_, i) => (
             <span key={i} className="progress-seg">
@@ -206,13 +200,13 @@ export function Story({ data, who, onClose }: { data: Wrapped; who: string | nul
           ))}
         </div>
         <div className="absolute inset-x-3 top-6 z-30 flex items-center justify-between">
-          <span className="truncate text-xs font-semibold text-white/90">{title}</span>
-          <span className="flex gap-1">
-            <button type="button" className="rounded-full p-2 text-white/90 hover:bg-white/10" onClick={() => (ended ? (setIdx(0), setProgress(0)) : setPaused(!paused))} aria-label={ended ? 'Replay' : paused ? 'Play' : 'Pause'} data-testid="story-pause">
-              {ended ? <RotateCcw size={18} /> : paused ? <Play size={18} /> : <Pause size={18} />}
+          <span className="truncate text-xs font-bold">{title}</span>
+          <span className="flex gap-2">
+            <button type="button" className="phone-btn" onClick={() => (ended ? (setIdx(0), setProgress(0)) : setPaused(!paused))} aria-label={ended ? 'Replay' : paused ? 'Play' : 'Pause'} data-testid="story-pause">
+              {ended ? <RotateCcw size={16} strokeWidth={2.5} /> : paused ? <Play size={16} strokeWidth={2.5} /> : <Pause size={16} strokeWidth={2.5} />}
             </button>
-            <button type="button" className="rounded-full p-2 text-white/90 hover:bg-white/10" onClick={onClose} aria-label="Close story" data-testid="story-close">
-              <X size={18} />
+            <button type="button" className="phone-btn" onClick={onClose} aria-label="Close story" data-testid="story-close">
+              <X size={16} strokeWidth={2.5} />
             </button>
           </span>
         </div>
@@ -221,10 +215,10 @@ export function Story({ data, who, onClose }: { data: Wrapped; who: string | nul
           <motion.div
             key={idx}
             className="absolute inset-0 z-10 px-6 pb-6 pt-16"
-            initial={safe ? { opacity: 0, scale: 0.97, filter: 'blur(8px)' } : false}
-            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-            exit={safe ? { opacity: 0, scale: 0.98, filter: 'blur(6px)', transition: { duration: 0.15 } } : { opacity: 0, transition: { duration: 0 } }}
-            transition={safe ? { type: 'spring', damping: 26, stiffness: 300 } : { duration: 0 }}
+            initial={safe ? { opacity: 0, x: 28 } : false}
+            animate={{ opacity: 1, x: 0 }}
+            exit={safe ? { opacity: 0, x: -20, transition: { duration: 0.08 } } : { opacity: 0, transition: { duration: 0 } }}
+            transition={safe ? { duration: 0.16, ease: 'easeOut' } : { duration: 0 }}
             data-testid="story-slide"
           >
             <SlideBody s={s} data={data} />
@@ -239,24 +233,24 @@ export function Story({ data, who, onClose }: { data: Wrapped; who: string | nul
       </div>
 
       <aside className="hidden w-full max-w-sm flex-col gap-4 md:flex" aria-label="Receipts">
-        <div className="glass p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Slide {idx + 1} of {deck.length}</p>
+        <Card className="gap-0 p-5">
+          <p className="font-head text-xs uppercase tracking-wider text-muted-foreground">Slide {idx + 1} of {deck.length}</p>
           {side ? (
             <>
-              <h3 className="mt-2 font-display text-2xl font-bold">{side.title}</h3>
-              <p className="mt-1 text-sm text-slate-300">{side.value_text}</p>
-              <p className="mt-3 text-sm leading-relaxed text-slate-200">{data.captions.awards[side.key]}</p>
+              <h3 className="mt-2 text-2xl">{side.title}</h3>
+              <p className="mt-1 text-sm font-medium">{side.value_text}</p>
+              <p className="mt-3 text-sm leading-relaxed">{data.captions.awards[side.key]}</p>
             </>
           ) : (
-            <p className="mt-2 text-sm text-slate-300">Tap the right side or press → to go on, ← to go back. Hold to pause, space to pause too.</p>
+            <p className="mt-2 text-sm">Tap the right side or press → to go on, ← to go back. Hold to pause, space to pause too.</p>
           )}
-        </div>
+        </Card>
         {side && (
-          <div className="glass space-y-3 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">The receipt, in full</p>
+          <Card className="gap-3 p-5">
+            <p className="font-head text-xs uppercase tracking-wider text-muted-foreground">The receipt, in full</p>
             {side.context && <Bubble r={side.context} lines={20} size="text-sm" />}
             <Bubble r={side.receipt} reply={!!side.context} lines={30} size="text-sm" />
-          </div>
+          </Card>
         )}
       </aside>
     </section>

@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiAvailable, fetchMembers, fetchWrapped, loadDemo, type Format } from './api';
 import type { MembersResponse, Wrapped } from './types';
+import { PeopleColors } from './components/bits';
 import { BottomNav, type Tab } from './components/Nav';
 import { fadeIn } from './motion';
 import { AddToChat } from './screens/AddToChat';
@@ -17,16 +18,6 @@ import { Story } from './screens/Story';
 // that wasn't ticked.
 interface Pending { file: File; format: Format; members: MembersResponse }
 
-function Ambient() {
-  return (
-    <div className="app-bg" aria-hidden="true">
-      <div className="glow-blob glow-a" />
-      <div className="glow-blob glow-b" />
-      <div className="glow-blob glow-c" />
-    </div>
-  );
-}
-
 export default function App() {
   const [live, setLive] = useState<boolean | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
@@ -36,6 +27,9 @@ export default function App() {
   const [storyWho, setStoryWho] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pops go by place among the named people, so six people get six colours.
+  const colors = useMemo(() => new Map((data?.profiles ?? []).map((p, i) => [p.name, i])), [data]);
 
   useEffect(() => { apiAvailable().then(setLive); }, []);
   useEffect(() => { window.scrollTo({ top: 0 }); }, [tab, profile, data]);
@@ -64,7 +58,6 @@ export default function App() {
   if (!data) {
     return (
       <>
-        <Ambient />
         <AnimatePresence mode="wait">
           <motion.div key={pending ? 'optin' : 'landing'} variants={fadeIn} initial="hidden" animate="visible" exit="exit">
             {pending ? (
@@ -87,16 +80,15 @@ export default function App() {
   else screen = <AddToChat />;
 
   return (
-    <>
-      <Ambient />
+    <PeopleColors.Provider value={colors}>
       <div className="relative z-10 flex min-h-screen">
         <div className="min-w-0 flex-1">
           <div className="mx-auto flex max-w-xl items-center justify-between px-4 pt-4">
             <button type="button" onClick={home} className="flex items-center gap-2" data-testid="home">
-              <span className="h-7 w-7 rounded-lg" style={{ background: 'linear-gradient(135deg,#a78bfa,#e879f9)' }} aria-hidden="true" />
-              <span className="font-display font-bold">Wrapped</span>
+              <span className="h-7 w-7 rounded-md border-2 border-black bg-pink shadow-sm" aria-hidden="true" />
+              <span className="font-head text-lg">Wrapped</span>
             </button>
-            <span className="text-[11px] text-slate-400">Nothing is stored</span>
+            <span className="text-[11px] font-medium text-muted-foreground">Nothing is stored</span>
           </div>
           <AnimatePresence mode="wait">
             <motion.div key={person ? `p-${person.name}` : tab} variants={fadeIn} initial="hidden" animate="visible" exit="exit">
@@ -106,6 +98,6 @@ export default function App() {
         </div>
       </div>
       <BottomNav tab={tab} onTab={goTab} />
-    </>
+    </PeopleColors.Provider>
   );
 }

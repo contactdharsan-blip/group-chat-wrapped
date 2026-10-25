@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { Award } from './types';
 
 export function when(iso: string): string {
@@ -11,8 +12,19 @@ export function shortDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function avatarGradient(hue: number): string {
-  return `linear-gradient(135deg, hsl(${hue} 72% 62%), hsl(${(hue + 45) % 360} 68% 44%))`;
+// The six flat pops in styles.css (--pop-0..5, each with its own black or white --pop-N-fg).
+export const POPS = 6;
+
+/** Inline style that sets --pop / --pop-fg to pop i; pair with .pop-fill, .avatar or .story-ring. */
+export function pop(i: number): CSSProperties {
+  const n = ((i % POPS) + POPS) % POPS;
+  return { ['--pop' as string]: `var(--pop-${n})`, ['--pop-fg' as string]: `var(--pop-${n}-fg)` };
+}
+
+/** The same pop as --slide / --slide-fg, for the story phone. */
+export function slidePop(i: number): CSSProperties {
+  const n = ((i % POPS) + POPS) % POPS;
+  return { ['--slide' as string]: `var(--pop-${n})`, ['--slide-fg' as string]: `var(--pop-${n}-fg)` };
 }
 
 /** Split value_text around its largest number, so the number can count up and the rest stays put. */
@@ -30,22 +42,13 @@ export function splitValue(text: string): { before: string; n: number | null; de
   };
 }
 
-// One glow tint per award, all inside the violet / fuchsia / sky family.
-const TINTS: Record<string, [string, string]> = {
-  main_character: ['167, 139, 250', '232, 121, 249'],
-  novelist: ['129, 140, 248', '56, 189, 248'],
-  three_am: ['99, 102, 241', '30, 64, 175'],
-  omw: ['232, 121, 249', '244, 114, 182'],
-  left_on_read: ['148, 163, 184', '129, 140, 248'],
-  hype: ['217, 70, 239', '250, 204, 21'],
-  speed_demon: ['56, 189, 248', '45, 212, 191'],
-  ghost: ['203, 213, 225', '167, 139, 250'],
-  emoji: ['244, 114, 182', '167, 139, 250'],
-  group_word: ['192, 132, 252', '56, 189, 248'],
-  busiest_day: ['236, 72, 153', '124, 58, 237'],
+// One pop per award, in the order the awards run, so neighbours in the feed differ.
+const AWARD_POP: Record<string, number> = {
+  main_character: 0, novelist: 1, three_am: 2, omw: 3, left_on_read: 4, hype: 5,
+  speed_demon: 0, ghost: 1, emoji: 2, group_word: 3, busiest_day: 4,
 };
-export function tint(key: string): [string, string] {
-  return TINTS[key] ?? ['167, 139, 250', '56, 189, 248'];
+export function awardPop(key: string): CSSProperties {
+  return pop(AWARD_POP[key] ?? 5);
 }
 
 export const KICKERS: Record<string, string> = {
