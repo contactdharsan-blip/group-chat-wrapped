@@ -18,17 +18,17 @@ export function Avatar({ m, size = 40, ring = false }: { m: Member; size?: numbe
 }
 
 /** A receipt as a glass chat bubble, with who and when. Long ones clamp and expand on tap. */
-export function Bubble({ r, reply = false, lines = 6, size = 'text-[15px]' }: { r: Receipt; reply?: boolean; lines?: number; size?: string }) {
+export function Bubble({ r, reply = false, lines = 6, size = 'text-[15px]', expandable = true }: { r: Receipt; reply?: boolean; lines?: number; size?: string; expandable?: boolean }) {
   const [open, setOpen] = useState(false);
-  const long = r.text.length > lines * 38;
+  const long = expandable && r.text.length > lines * 38;
   return (
     <figure className={`flex flex-col ${reply ? 'items-end' : 'items-start'} gap-1`}>
       <figcaption className="px-1 text-xs font-semibold text-slate-300/80">{r.author}</figcaption>
-      <blockquote
-        className={`bubble ${reply ? 'reply' : ''} max-w-full px-4 py-2.5 leading-snug ${size} text-slate-50 ${open ? '' : 'clamp'}`}
-        style={{ ['--lines' as string]: lines }}
-      >
-        {r.text || <span className="italic text-slate-400">(a photo or sticker)</span>}
+      <blockquote className={`bubble ${reply ? 'reply' : ''} max-w-full px-4 py-2.5 leading-snug ${size} text-slate-50`}>
+        {/* The clamp sits on an inner box: WebKit paints clamped lines into the padding otherwise. */}
+        <span className={`block ${open ? '' : 'clamp'}`} style={{ ['--lines' as string]: lines }}>
+          {r.text || <span className="italic text-slate-400">(a photo or sticker)</span>}
+        </span>
       </blockquote>
       <div className="flex items-center gap-2 px-1">
         <time className="font-mono text-[11px] text-slate-400" dateTime={r.ts}>{when(r.ts)}</time>

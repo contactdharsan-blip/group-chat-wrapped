@@ -14,8 +14,8 @@ const CARDS = [
     steps: [
       <>Invite the Wrapped bot to your server.</>,
       <>Everyone who wants to be in it runs <Cmd>/wrapped optin</Cmd>.</>,
-      <>Anyone runs <Cmd>/wrapped</Cmd> and the story posts in the channel, one award at a time.</>,
-      <><Cmd>/wrapped me</Cmd> posts your own profile card.</>,
+      <>Anyone runs <Cmd>/wrapped run</Cmd>: the slides post in the channel, then one card per award with its receipt.</>,
+      <><Cmd>/wrapped-me</Cmd> posts your own profile card.</>,
     ],
   },
   {
@@ -27,7 +27,7 @@ const CARDS = [
       <>One person in the group runs the bridge on their Mac.</>,
       <>Members type <Cmd>wrapped optin</Cmd> in the group.</>,
       <>Anyone types <Cmd>wrapped</Cmd> and the slides arrive in the chat.</>,
-      <><Cmd>wrapped me</Cmd> sends your profile card.</>,
+      <>Only people who opted in are named; everyone else is “someone”.</>,
     ],
   },
   {

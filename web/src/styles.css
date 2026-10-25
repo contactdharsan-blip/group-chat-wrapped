@@ -360,7 +360,7 @@ button { font: inherit; color: inherit; }
 
 /* ── Story player ──────────────────────────────────────────────────────────────── */
 .phone {
-  position: relative; width: min(100%, 420px); aspect-ratio: 9 / 16; border-radius: 2rem; overflow: hidden;
+  position: relative; width: min(100%, 420px, calc((100dvh - 190px) * 9 / 16)); aspect-ratio: 9 / 16; border-radius: 2rem; overflow: hidden;
   background: #050816;
   border: 1px solid rgba(255,255,255,0.14);
   box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 6px rgba(255,255,255,0.03), 0 0 60px rgba(var(--slide-rgb, var(--theme-primary-rgb)), 0.18);

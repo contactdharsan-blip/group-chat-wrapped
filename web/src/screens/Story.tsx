@@ -116,8 +116,8 @@ function SlideBody({ s, data }: { s: Slide; data: Wrapped }) {
       <p className="mt-3 text-base leading-snug text-slate-100"><CountValue text={a.value_text} /></p>
       <div className="mt-auto space-y-2 pb-2">
         {a.detail && <p className="text-[13px] text-slate-300">{a.detail}</p>}
-        {a.context && <Bubble r={a.context} lines={2} size="text-[13px]" />}
-        <Bubble r={a.receipt} reply={!!a.context} lines={rs.lines} size={rs.size} />
+        {a.context && <Bubble r={a.context} lines={2} size="text-[13px]" expandable={false} />}
+        <Bubble r={a.receipt} reply={!!a.context} lines={rs.lines} size={rs.size} expandable={false} />
         <p className="pt-1 text-[13px] italic leading-snug text-violet-100/90">{data.captions.awards[a.key]}</p>
       </div>
     </div>
