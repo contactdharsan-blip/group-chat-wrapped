@@ -8,6 +8,14 @@ Team: Dharsan Kesavan ([contactdharsan-blip](https://github.com/contactdharsan-b
 ([JaShams](https://github.com/JaShams)), Lovinder Singh ([singhLovinder](https://github.com/singhLovinder)).
 Cubbie Hackathon, Track 3 (group chat assistant).
 
+- **Live demo:** <https://contactdharsan-blip.github.io/group-chat-wrapped/> is the web companion
+  playing the invented demo chat in your browser. No Discord, no sign-in, no upload (that needs the
+  Python server, below).
+- **Demo video (73 s):** <https://contactdharsan-blip.github.io/group-chat-wrapped/demo.mp4> is a
+  recording of the web app: the feed, the story with its receipts, a profile, and an upload where
+  only the two people who opted in are named. The Discord bot appears only as text in it, because it
+  has not run on a live server yet.
+
 <p>
   <img src="docs/screens/mobile-03-feed.png" alt="The feed: one post per award, with its receipt and caption" width="260">
   <img src="docs/screens/mobile-04-profile.png" alt="An opted-in member's profile: messages, awards and badges" width="260">
@@ -282,6 +290,9 @@ npm --prefix web run build           # web/dist
 - `node scripts/smoke_web.mjs` (after `build:static`) drives the app in Playwright WebKit at 390x844
   and 1440x900, uploads `demo/demo-chat.txt` with Jordan and Theo unticked and checks their names never
   reach the DOM, and writes screenshots to `out/screens/`. It starts and stops its own servers.
+- `scripts/build_pages.sh <outdir>` runs `build:static` and copies `web/dist`, `docs/demo.mp4` and a
+  `.nojekyll` into `<outdir>`, ready for GitHub Pages under a subpath. `node scripts/record_demo.mjs`
+  (after `build:static`) re-records `docs/demo.mp4` in Playwright WebKit and converts it with ffmpeg.
 
 ## Requirements
 
