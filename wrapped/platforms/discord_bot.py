@@ -1,13 +1,11 @@
-"""The Discord bot: /wrapped optin, /wrapped optout, /wrapped run, and /wrapped-me.
+"""The Discord bot: /wrapped optin, /wrapped optout, /wrapped run, and /wrapped me.
 
     .venv/bin/python -m wrapped.platforms.discord_bot [--guild <server id>] [--web-url URL] [--claude]
 
 /wrapped run posts the slides, then one embed per award (the winner's colour,
-the numbers, the receipt and a caption). /wrapped-me posts the caller's own
+the numbers, the receipt and a caption). /wrapped me posts the caller's own
 profile card as an embed; someone who hasn't opted in gets a private reply
-telling them to run /wrapped optin. (It is a top-level command, not a
-"/wrapped me" subcommand, because tests/test_discord_bot.py pins the group's
-subcommands to optin, optout and run.)
+telling them to run /wrapped optin.
 
 Everything above build_bot() is plain Python over duck-typed Discord objects, so
 it is tested with fakes and needs neither discord.py nor the network. discord.py
@@ -293,9 +291,7 @@ def build_bot(handlers: Handlers, guild_id: int | None = None):
         summary = await handlers.run(interaction.channel, f"#{name}", send, progress, send_embeds)
         await status.edit(content=summary)
 
-    tree.add_command(group)
-
-    @tree.command(name="wrapped-me", description="Post your own Wrapped profile card (opted-in members only)")
+    @group.command(name="me", description="Post your own Wrapped profile card (opted-in members only)")
     async def wrapped_me(interaction: discord.Interaction):
         if str(interaction.user.id) not in handlers.store.names(interaction.channel_id):
             text, _ = await handlers.me(interaction.channel, interaction.user.id)
@@ -307,6 +303,8 @@ def build_bot(handlers: Handlers, guild_id: int | None = None):
             await interaction.followup.send(text, ephemeral=True)
         else:
             await interaction.followup.send(embed=discord.Embed.from_dict(embed))
+
+    tree.add_command(group)
 
     async def setup_hook():  # once per start, not on every reconnect like on_ready
         if guild_id:  # a test server: the commands appear at once

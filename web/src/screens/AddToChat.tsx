@@ -15,7 +15,7 @@ const CARDS = [
       <>Invite the Wrapped bot to your server.</>,
       <>Everyone who wants to be in it runs <Cmd>/wrapped optin</Cmd>.</>,
       <>Anyone runs <Cmd>/wrapped run</Cmd>: the slides post in the channel, then one card per award with its receipt.</>,
-      <><Cmd>/wrapped-me</Cmd> posts your own profile card.</>,
+      <><Cmd>/wrapped me</Cmd> posts your own profile card.</>,
     ],
   },
   {

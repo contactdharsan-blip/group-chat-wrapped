@@ -226,7 +226,7 @@ class WiringTests(unittest.TestCase):
             self.assertTrue(client.intents.message_content)
             group = tree.get_command("wrapped")
             self.assertIsNotNone(group)
-            self.assertEqual(sorted(c.name for c in group.commands), ["optin", "optout", "run"])
+            self.assertEqual(sorted(c.name for c in group.commands), ["me", "optin", "optout", "run"])
 
 
 if __name__ == "__main__":

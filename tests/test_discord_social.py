@@ -1,4 +1,4 @@
-"""The Discord bot's award embeds and /wrapped-me, against fakes (no network, no discord.py needed)."""
+"""The Discord bot's award embeds and /wrapped me, against fakes (no network, no discord.py needed)."""
 
 import asyncio
 import importlib.util
@@ -106,7 +106,7 @@ class SocialWiringTests(unittest.TestCase):
         from wrapped.platforms.discord_bot import build_bot
         with tempfile.TemporaryDirectory() as tmp:
             _, tree = build_bot(Handlers(OptinStore(Path(tmp) / "o.json")))
-            self.assertIsNotNone(tree.get_command("wrapped-me"))
+            self.assertIsNotNone(tree.get_command("wrapped").get_command("me"))
         result = {"awards": [{"key": "hype", "title": "Hype Machine", "winner": "Maya", "value_text": "3 messages",
                               "detail": "", "receipt": {"author": "Maya", "ts": "2026-09-01T10:00:00", "text": "OMG"}}]}
         e = discord.Embed.from_dict(award_embeds(result, [], {"awards": {"hype": "Loud."}})[0])
