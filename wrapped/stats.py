@@ -33,8 +33,12 @@ LATE_NIGHT = range(1, 5)  # 1:00-4:59 AM
 OMW = re.compile(r"\b(omw|on my way|otw)\b", re.IGNORECASE)
 WORD = re.compile(r"[a-z]+(?:'[a-z]+)*")
 URL = re.compile(r"https?://\S+")
+# One emoji as people see it: a flag (two regional letters), or a base emoji
+# with any skin tone or VS16, joined by ZWJ into families and the like.
+_EMOJI_BASE = "[\U0001F300-\U0001F3FA\U0001F400-\U0001FAFF\U0001F000-\U0001F1E5\U0001F200-\U0001F2FF☀-➿⭐⭕❣❤]"
+_EMOJI_TAIL = "[\uFE0F\U0001F3FB-\U0001F3FF]*"
 EMOJI = re.compile(
-    "[\U0001F300-\U0001F3FA\U0001F400-\U0001FAFF\U0001F000-\U0001F2FF☀-➿⭐⭕❣❤]"
+    f"[\U0001F1E6-\U0001F1FF]{{2}}|{_EMOJI_BASE}{_EMOJI_TAIL}(?:\u200D{_EMOJI_BASE}{_EMOJI_TAIL})*"
 )
 
 STOPWORDS = frozenset(
@@ -467,11 +471,14 @@ def _emoji(ctx):
     if not overall:
         return None
     top = min(overall, key=lambda e: (-overall[e], e))
-    per = {a: sum(m.text.count(top) for m in ctx.mine(a)) for a in ctx.named}
+    def uses(m):  # whole emoji only, so a plain 👍 isn't counted inside 👍🏽
+        return EMOJI.findall(m.text).count(top)
+
+    per = {a: sum(uses(m) for m in ctx.mine(a)) for a in ctx.named}
     w = _pick({a: n for a, n in per.items() if n})
     if not w:
         return None
-    best = _first_by([m for m in ctx.mine(w) if top in m.text], lambda m: m.text.count(top))
+    best = _first_by([m for m in ctx.mine(w) if uses(m)], uses)
     return _award(
         ctx, "emoji", "Emoji of the Semester", w,
         f"{top} used {overall[top]:,} times"

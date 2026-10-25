@@ -193,6 +193,26 @@ class AwardTests(unittest.TestCase):
         self.assertEqual(a["emoji"], "\U0001F62D")
         self.assertEqual(a["receipt"]["text"], "\U0001F62D\U0001F62D\U0001F62D")
 
+    def test_emoji_counts_whole_flags_families_and_skin_tones(self):
+        from wrapped import profiles
+        from wrapped.stats import EMOJI
+        family, thumb, thumb_tone, flag = "\U0001F468‍\U0001F469‍\U0001F467", "\U0001F44D", "\U0001F44D\U0001F3FD", "\U0001F1FA\U0001F1F8"
+        heart = "❤️"
+        self.assertEqual(EMOJI.findall(f"{flag}{flag} {family} {thumb_tone}{thumb} {heart}"),
+                         [flag, flag, family, thumb_tone, thumb, heart])
+        rows = []
+        for i in range(10):
+            rows.append(("Ari", f"2026-09-01 10:{i:02d}", flag + flag))
+            rows.append(("Bo", f"2026-09-01 10:{i:02d}:05", f"{family} {thumb_tone}"))
+        rows.append(("Bo", "2026-09-01 11:00", thumb))
+        msgs = chat(*rows)
+        result = compute(msgs, {"Ari", "Bo"})
+        a = award(result, "emoji")
+        self.assertEqual(a["emoji"], flag)
+        self.assertEqual(a["value_text"], f"{flag} used 20 times, every single one by Ari")
+        bo = next(p for p in profiles.build(msgs, result) if p["name"] == "Bo")
+        self.assertEqual({e["emoji"]: e["count"] for e in bo["top_emoji"]}, {family: 10, thumb_tone: 10, thumb: 1})
+
     def test_group_word(self):
         rows = []
         for i in range(6):
