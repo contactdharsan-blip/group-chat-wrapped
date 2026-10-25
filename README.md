@@ -99,11 +99,9 @@ All three run the same pipeline and the same consent rule: only people who opted
    anyone runs `/wrapped run`. The bot reads the newest 20,000 messages (`--limit` changes that) with a
    progress message, then posts the slides ten per message, the MP4 if it's under 10 MB, and then one
    embed per award: the winner's colour, the numbers, the receipt and a caption.
-6. `/wrapped-me` posts your own profile card as an embed: messages, posts, awards, peak hour, badges,
+6. `/wrapped me` posts your own profile card as an embed: messages, posts, awards, peak hour, badges,
    top emoji and top words. If you haven't opted in, it tells you privately to run `/wrapped optin`
-   and reads nothing. `--web-url <url>` adds a link to the web app on every embed. (It's `/wrapped-me`
-   and not `/wrapped me` because `tests/test_discord_bot.py` pins the `/wrapped` group to optin, optout
-   and run.)
+   and reads nothing. `--web-url <url>` adds a link to the web app on every embed.
 
 Opt-ins are kept per channel in `~/.config/group-chat-wrapped/discord-optins.json`. A run works in a
 temporary folder that is deleted after posting. Rendering needs Node, WebKit and ffmpeg on the bot's
