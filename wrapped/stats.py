@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 import statistics
+import unicodedata
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from functools import lru_cache
@@ -76,7 +77,7 @@ def english_ranks() -> dict[str, int]:
 
 
 def words(text: str) -> list[str]:
-    return WORD.findall(URL.sub(" ", text.lower().replace("’", "'")))
+    return WORD.findall(URL.sub(" ", fold(text.lower().replace("’", "'"))))
 
 
 def is_question(text: str) -> bool:
@@ -116,6 +117,50 @@ def _capitalised(token: str) -> str:
     return token[:1].upper() + token[1:].lower()
 
 
+_FOLD = str.maketrans({"ß": "ss", "ẞ": "SS", "æ": "ae", "Æ": "Ae", "œ": "oe", "Œ": "Oe", "ø": "o", "Ø": "O",
+                       "ł": "l", "Ł": "L", "đ": "d", "Đ": "D", "ð": "d", "þ": "th", "ı": "i"})
+_UMLAUT = str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue"})
+
+
+@lru_cache(maxsize=4096)
+def _fold_char(c: str) -> str:
+    return "".join(x for x in unicodedata.normalize("NFKD", c.translate(_FOLD)) if not unicodedata.combining(x))
+
+
+def fold(text: str) -> str:
+    """Accents off: "Zoë Müller" -> "Zoe Muller", "Strauß" -> "Strauss"."""
+    return "".join(map(_fold_char, text))
+
+
+def _fold_map(text: str) -> tuple[str, list[int]]:
+    """fold(text), and for each of its characters the index it came from."""
+    out, src = [], []
+    for i, c in enumerate(text):
+        f = _fold_char(c)
+        out.append(f)
+        src.extend([i] * len(f))
+    return "".join(out), src
+
+
+def spellings(part: str) -> set[str]:
+    """How a name part is written without accents: "Müller" as Muller and
+    Mueller, and "Mueller" as Muller too."""
+    out = {fold(part), fold(part.translate(_UMLAUT))}
+    if part.isascii():
+        out.add(re.sub(r"([AaOoUu])e", r"\1", part))
+    return {x for x in out if len(x) >= 3}
+
+
+def squeeze(word: str) -> str:
+    """Repeated letters as one: "kaylaaa" -> "kayla", "anna" -> "ana"."""
+    return re.sub(r"(.)\1+", r"\1", word)
+
+
+def _unstretched(word: str) -> set[str]:
+    """A word with any run of 3+ letters cut to one and to two ("saaam" -> sam, saam)."""
+    return {word, re.sub(r"(.)\1{2,}", r"\1", word), re.sub(r"(.)\1{2,}", r"\1\1", word)}
+
+
 _NAME_PART = re.compile(r"[^\W\d_]+")  # a run of letters: names split on dots, digits, emoji...
 _LETTER = r"[^\W\d_]"
 
@@ -128,7 +173,7 @@ def name_parts(name: str) -> list[str]:
 def nicknames(name: str) -> set[str]:
     """Capitalised prefixes of 3+ letters of a first name ("Kay", "Kayl" for
     Kayla), leaving out ordinary words ("The" for Theodore, "Will" for William)."""
-    first = (name_parts(name) or [""])[0]
+    first = fold((name_parts(name) or [""])[0])
     return {_capitalised(first[:k]) for k in range(3, len(first)) if not is_ordinary_word(first[:k])}
 
 
@@ -176,6 +221,10 @@ class Redactor:
 
     Names are split into letter runs ("kayla.brooks" is kayla and brooks), and
     matched in text between non-letters, so "Kayla🌸" and "@kayla_b" match too.
+    Accents are folded on both sides ("Zoë" is Zoe, "Müller" is Muller and
+    Mueller). A word with a letter written 3+ times in a row is compared with
+    its repeats squeezed out, so "anaaa" and "Annnaa" are Ana, and
+    "Kaylaaa" is Kayla; "Anna" (no 3+ run) is not Ana.
 
     Replaced with "someone":
       * the whole name as written, and each 3+ letter part, in any case;
@@ -185,57 +234,100 @@ class Redactor:
     rather than show this one mangled or leaking):
       * an ordinary-word part or nickname in any other casing ("mark", "WILL",
         "kay"), which may be the word or the name;
-      * a longer word starting with a 4+ letter part ("kaylas", "Kaylaaa");
+      * a longer word starting with a 4+ letter part ("kaylas");
       * a part that is also part of an opted-in member's name;
       * a phone number.
     A nickname that is part of an opted-in name is left alone (hidden
     "Benjamin" doesn't hide opted-in "Ben")."""
 
     def __init__(self, hidden_names: set[str], named: set[str] = frozenset()):
-        self._keep = keep = {t.casefold() for n in named for t in name_parts(n)}
+        self._keep = keep = {x.casefold() for n in named for t in name_parts(n) for x in spellings(t) | {fold(t)}}
         any_case, capitalised, nicks, shared, stems = set(), set(), set(), set(), set()
         for name in hidden_names:
             name = name.strip()
             parts = [t for t in name_parts(name) if len(t) >= 3]
             if name and (len(name_parts(name)) != 1 or not parts or name != parts[0]):
-                any_case.add(name)  # the name as written: "Kayla Brooks", "kayla.brooks", "Al"
+                any_case.update({fold(name), fold(name.translate(_UMLAUT))})  # the name as written
             for t in parts:
-                if t.casefold() in keep:
-                    shared.add(t)
-                elif is_ordinary_word(t):
-                    capitalised.add(_capitalised(t))
-                else:
-                    any_case.add(t)
-                    if len(t) >= 4:
-                        stems.add(t)
+                for x in spellings(t):
+                    if x.casefold() in keep:
+                        shared.add(x)
+                    elif is_ordinary_word(x):
+                        capitalised.add(_capitalised(x))
+                    else:
+                        any_case.add(x)
+                        if len(squeeze(x.lower())) >= 4:
+                            stems.add(x)
             nicks.update(n for n in nicknames(name) if n.casefold() not in keep)
         nicks -= capitalised
         # A nickname must not eat the "Don" of "Don't".
         guard = r"(?!['’](?:t|ll|re|ve|d|m)\b)"
-        alts = [(t, f"(?i:{re.escape(t)})") for t in any_case]
-        alts += [(t, re.escape(t)) for t in capitalised]
-        alts += [(t, re.escape(t) + guard) for t in nicks]
-        self._pattern = _between_letters(alts, prefix="@?")
+        self._pattern = _between_letters(
+            [(t, f"(?i:{re.escape(t)})") for t in any_case]
+            + [(t, re.escape(t)) for t in capitalised]
+            + [(t, re.escape(t) + guard) for t in nicks],
+            prefix="@?",
+        )
         # Run on text already cleaned, where any match left is a casing that wasn't replaced.
         self._unsure = _between_letters(
             [(t, f"(?i:{re.escape(t)})") for t in capitalised | shared]
             + [(t, f"(?i:{re.escape(t)}){guard}") for t in nicks]
         )
         self._variant = (
-            re.compile(rf"(?<!{_LETTER})(?i:{'|'.join(map(re.escape, sorted(stems, key=len, reverse=True)))}){_LETTER}+")
+            re.compile(rf"(?<!{_LETTER})(?i:{'|'.join(map(re.escape, sorted(stems, key=len, reverse=True)))})"
+                       rf"{_LETTER}+")
             if stems else None
         )
+        squeezed = lambda names: {squeeze(n.lower()) for n in names}  # noqa: E731
+        self._squeezed_any, self._squeezed_shared = squeezed(any_case), squeezed(shared)
+        self._squeezed_word = squeezed(capitalised | nicks)
+
+    def _stretched(self, word: str) -> str | None:
+        """For a folded word with a letter 3+ times in a row: "name" if it is a
+        name, "unsure" if it may be one, else None."""
+        key = squeeze(word.lstrip("@").lower())
+        if key in self._squeezed_any:
+            return "name"
+        if key in self._squeezed_word:
+            bare = word.lstrip("@")
+            return "name" if bare[:1].isupper() and bare[1:].islower() else "unsure"
+        return "unsure" if key in self._squeezed_shared else None
+
+    def _spans(self, folded: str) -> list[tuple[int, int]]:
+        """Where the names are in folded text, in order, not overlapping."""
+        spans = [m.span() for m in self._pattern.finditer(folded)] if self._pattern else []
+        spans += [m.span() for m in _STRETCHED_WORD.finditer(folded) if self._stretched(m.group()) == "name"]
+        out = []
+        for a, b in sorted(spans):
+            if not out or a >= out[-1][1]:
+                out.append((a, b))
+        return out
 
     def __call__(self, text: str) -> str:
-        return self._pattern.sub(SOMEONE, text) if self._pattern else text
+        folded, src = _fold_map(text)
+        out, last = [], 0
+        for start, end in self._spans(folded):
+            a, b = max(src[start], last), src[end - 1] + 1
+            while b < len(text) and unicodedata.combining(text[b]):
+                b += 1  # a decomposed accent belongs to the name
+            out += [text[last:a], SOMEONE]
+            last = b
+        return "".join(out) + text[last:]
 
     def quotable(self, text: str) -> bool:
         if has_phone_number(text):
             return False
-        text = self(text)
-        if self._unsure and self._unsure.search(text):
+        folded = fold(self(text))
+        if self._unsure and self._unsure.search(folded):
             return False
-        return not (self._variant and any(m.group().casefold() not in self._keep for m in self._variant.finditer(text)))
+        if any(self._stretched(m.group()) == "unsure" for m in _STRETCHED_WORD.finditer(folded)):
+            return False
+        return not (self._variant and any(m.group().casefold() not in self._keep
+                                          for m in self._variant.finditer(folded)))
+
+
+# A word with one letter 3+ times in a row: "anaaa", "Kaylaaa", "@saaam".
+_STRETCHED_WORD = re.compile(rf"@?(?<!{_LETTER})(?={_LETTER}*?({_LETTER})\1\1){_LETTER}+(?!{_LETTER})")
 
 
 def _between_letters(alts: list[tuple[str, str]], prefix: str = ""):
@@ -278,11 +370,13 @@ def name_matcher(messages: list[Message], named):
     """A test for lowercase words that are names, so Group Word and top words
     skip them: a word of anyone's name, opted in or not, a nickname of someone
     who didn't opt in, or a longer word starting with a 4+ letter part of
-    their name ("kaylas", "kaylaaa")."""
+    their name ("kaylas"). Accents are folded and stretched letters cut back
+    ("anaaa" is Ana)."""
     hidden = hidden_names(messages, named)
-    exact = {w for n in set(named) | hidden for w in words(n)} | {k.lower() for n in hidden for k in nicknames(n)}
-    stems = tuple(w for n in hidden for w in words(n) if len(w) >= 4)
-    return lambda w: w in exact or w.startswith(stems)
+    spelled = {x.lower() for n in hidden for t in name_parts(n) for x in spellings(t)}
+    exact = {w for n in set(named) | hidden for w in words(n)} | spelled | {k.lower() for n in hidden for k in nicknames(n)}
+    stems = tuple(x for x in spelled | {w for n in hidden for w in words(n)} if len(squeeze(x)) >= 4)
+    return lambda w: any(c in exact or c.startswith(stems) for c in _unstretched(w))
 
 
 def compute(messages: list[Message], opted_in: set[str] | None = None) -> dict:

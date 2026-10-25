@@ -406,6 +406,32 @@ class RedactorTests(unittest.TestCase):
         self.assertIn("see you someone", blob)
         assert_receipts_real(self, result, msgs)
 
+    def test_accents_fold_both_ways(self):
+        r = Redactor({"Zoë Müller"})
+        self.assertEqual(r("zoe where?? Zoe!!! muller? Mueller ZOË"), "someone where?? someone!!! someone? someone someone")
+        self.assertEqual(Redactor({"Zoe Mueller"})("Zoë Müller, MÜLLER"), "someone someone, someone")
+        self.assertEqual(Redactor({"Strauß"})("strauss and Strauß"), "someone and someone")
+
+    def test_stretched_names_match_their_name(self):
+        r = Redactor({"Ana Lopez"})
+        self.assertEqual(r("anaaa where r u?? ANAAA Annnaa"), "someone where r u?? someone someone")
+        for text in ("analysis of Anna", "banana"):  # a 3-letter name isn't a prefix rule, and nn isn't n
+            self.assertTrue(r.quotable(text), text)
+            self.assertEqual(r(text), text)
+        self.assertEqual(Redactor({"Sam"})("saaam!!!"), "someone!!!")
+
+    def test_accented_and_stretched_names_stay_out_of_top_words(self):
+        from wrapped import profiles
+        rows = []
+        for i in range(6):
+            rows += [("Zoë Müller", f"2026-09-01 10:{i:02d}", "hey"), ("Ana Lopez", f"2026-09-01 10:{i:02d}:05", "yo"),
+                     ("Bea", f"2026-09-01 10:{i:02d}:10", "zoe muller mueller anaaa zork analysis")]
+        msgs = chat(*rows)
+        [bea] = profiles.build(msgs, compute(msgs, {"Bea"}))
+        top = {w["word"] for w in bea["top_words"]}
+        self.assertFalse(top & {"zoe", "muller", "mueller", "anaaa"}, top)
+        self.assertIn("analysis", top)
+
     def test_name_shared_with_an_opted_in_member_is_never_quoted(self):
         r = Redactor({"maya"}, named={"Maya"})
         self.assertFalse(r.quotable("hi Maya"))
@@ -426,7 +452,9 @@ class RedactorTests(unittest.TestCase):
     def test_variants_of_a_name_are_never_quoted(self):
         r = Redactor({"Kayla Brooks"})
         self.assertFalse(r.quotable("kaylas crew"))
-        self.assertFalse(r.quotable("Kaylaaa!!!"))
+        self.assertFalse(r.quotable("Kaylaaas crew"))
+        self.assertEqual(r("Kaylaaa!!!"), "someone!!!")  # stretched, it is still her name
+        self.assertTrue(r.quotable("Kaylaaa!!!"))
         self.assertTrue(r.quotable("Kayla's party, Brooks's dog"))
         self.assertEqual(r("Kayla's party, Brooks's dog"), "someone's party, someone's dog")
 
