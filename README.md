@@ -136,8 +136,10 @@ What isn't, rare and accepted:
 - It errs towards leaving messages out or redacting too much: a chat with a non-opted Will quotes
   nothing that says "will"; a month written "Jan" is replaced when a hidden member is called Janet;
   an accent-free spelling can catch an ordinary word (hidden "Gael" also catches "gal", "Paez" catches
-  "paz", "Rafael" catches "Rafal"); and a long digit run that isn't a phone number ("2019 2020 2021
-  2022", an order number) keeps its message out.
+  "paz", "Rafael" catches "Rafal"); a hidden name that is also an ordinary word outside the bundled
+  word list is replaced even when it isn't the name (hidden Max: "max 5 people per table" becomes
+  "someone 5 people per table"; likewise Miles, Drew, Frank, Ray, Jack, Penny, Dawn, Sandy); and a
+  long digit run that isn't a phone number ("2019 2020 2021 2022", an order number) keeps its message out.
 
 - The CLI runs locally, with no network calls and no accounts. Nothing is uploaded. The Discord bot
   and the iMessage bridge post the finished slides back into the chat they were run in, and nowhere else.
