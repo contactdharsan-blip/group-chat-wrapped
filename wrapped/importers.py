@@ -67,20 +67,30 @@ def _match_header(line: str):
     return _IOS.match(line) or _ANDROID.match(line)
 
 
+def _in_order(headers, day_first: bool) -> int:
+    """How many header lines have a date that exists this way round and falls
+    in order between the parsed lines either side of it. An export is in time
+    order, so the right reading scores higher; a line pasted from a chat with
+    the other date order is out of place either way and barely counts."""
+    stamps = []
+    for m in headers:
+        try:
+            stamps.append(_parse_wa_datetime(m["date"], m["time"], day_first))
+        except ValueError:
+            pass
+    last = len(stamps) - 1
+    return sum((i == 0 or stamps[i - 1] <= t) and (i == last or t <= stamps[i + 1]) for i, t in enumerate(stamps))
+
+
 def parse_whatsapp(text: str) -> list[Message]:
     # iOS marks system notices (written with the group's name as author) by
     # starting the body with a left-to-right mark; remember that before the
     # invisibles are stripped.
     lines = [line.replace(f": {_LRM}", ": \x00", 1).translate(_INVISIBLES) for line in text.splitlines()]
-    # Month-first unless more dates can only be day-first (a first field over
-    # 12) than can only be month-first (a second field over 12), so one line
+    # Month-first unless more lines read in order day-first, so one line
     # pasted from a European chat doesn't flip every date in a US export.
-    day_votes = month_votes = 0
-    for m in filter(None, map(_match_header, lines)):
-        a, b = (int(x) for x in re.split(r"[./-]", m["date"])[:2])
-        day_votes += 12 < a <= 31
-        month_votes += a <= 12 < b <= 31
-    day_first = day_votes > month_votes
+    headers = [m for m in map(_match_header, lines) if m]
+    day_first = _in_order(headers, True) > _in_order(headers, False)
 
     messages: list[Message] = []
     current: Message | None = None

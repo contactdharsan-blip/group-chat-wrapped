@@ -83,11 +83,30 @@ class WhatsAppTests(unittest.TestCase):
         self.assertEqual(msgs[1].text, "forwarding\n[15/10/26, 21:41:03] X: pasted")
         self.assertEqual({m.author for m in msgs}, {"Ana", "Ben"})
 
+    def test_pasted_line_among_ambiguous_us_dates(self):
+        # 9/1 reads either way round; only the pasted line can't be month-first.
+        text = (
+            "[9/1/26, 12:00:00 PM] Ana: hi\n"
+            "[9/1/26, 12:01:00 PM] Ben: forwarding this:\n"
+            "[24/10/26, 21:41:03] Someone Else: pasted from another chat\n"
+            "[9/1/26, 12:02:00 PM] Ana: lol\n"
+            "[9/1/26, 12:03:00 PM] Ben: ok\n"
+        )
+        msgs = parse_whatsapp(text)
+        self.assertEqual({m.ts.date() for m in msgs}, {datetime(2026, 9, 1).date()})
+        self.assertEqual([m.author for m in msgs], ["Ana", "Ben", "Ana", "Ben"])
+
     def test_day_first_export_wins_the_vote(self):
         text = "13/10/26, 21:41 - Ana: hi\n14/10/26, 07:02 - Ben: yo\n10/14/26, 08:00 - Cy: pasted US line\n"
         msgs = parse_whatsapp(text)
         self.assertEqual([m.ts.date() for m in msgs], [datetime(2026, 10, 13).date(), datetime(2026, 10, 14).date()])
         self.assertIn("pasted US line", msgs[1].text)
+
+    def test_short_day_first_chat_with_few_days_over_twelve(self):
+        days = [10, 10, 11, 11, 12, 12, 12, 13, 14]
+        msgs = parse_whatsapp("".join(f"{d}/10/26, 09:{i:02d} - Ana: day {d}\n" for i, d in enumerate(days)))
+        self.assertEqual([m.ts.day for m in msgs], days)
+        self.assertEqual({m.ts.month for m in msgs}, {10})
 
     def test_impossible_dates_never_crash(self):
         msgs = parse_whatsapp("[2/30/26, 9:00:00 PM] Ana: impossible date\n[2/1/26, 9:00:00 PM] Ben: fine\n")
