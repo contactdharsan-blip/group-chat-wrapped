@@ -72,21 +72,29 @@ def parse_whatsapp(text: str) -> list[Message]:
     # starting the body with a left-to-right mark; remember that before the
     # invisibles are stripped.
     lines = [line.replace(f": {_LRM}", ": \x00", 1).translate(_INVISIBLES) for line in text.splitlines()]
-    headers = [m for m in map(_match_header, lines) if m]
-    # Month-first unless some first field can only be a day (> 12).
-    day_first = any(
-        12 < int(re.split(r"[./-]", m["date"])[0]) <= 31 for m in headers
-    )
+    # Month-first unless more dates can only be day-first (a first field over
+    # 12) than can only be month-first (a second field over 12), so one line
+    # pasted from a European chat doesn't flip every date in a US export.
+    day_votes = month_votes = 0
+    for m in filter(None, map(_match_header, lines)):
+        a, b = (int(x) for x in re.split(r"[./-]", m["date"])[:2])
+        day_votes += 12 < a <= 31
+        month_votes += a <= 12 < b <= 31
+    day_first = day_votes > month_votes
 
     messages: list[Message] = []
     current: Message | None = None
     for line in lines:
         m = _match_header(line)
+        try:
+            ts = _parse_wa_datetime(m["date"], m["time"], day_first) if m else None
+        except ValueError:  # a date that can't exist this way round, e.g. pasted text
+            m = None
         if not m:
             if current is not None:  # continuation of a multi-line message
+                line = line.replace("\x00", "")
                 current.text = f"{current.text}\n{line}" if current.text else line
             continue
-        ts = _parse_wa_datetime(m["date"], m["time"], day_first)
         rest = m["rest"]
         if ": " not in rest:
             # System line: "Messages and calls are end-to-end encrypted...",

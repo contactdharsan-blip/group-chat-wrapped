@@ -69,6 +69,32 @@ class WhatsAppTests(unittest.TestCase):
         self.assertEqual(msgs[0].ts, datetime(2026, 10, 24, 21, 41))
         self.assertEqual(msgs[1].ts, datetime(2026, 10, 25, 0, 1))
 
+    def test_one_pasted_day_first_line_does_not_flip_a_us_export(self):
+        text = (
+            "[9/1/26, 12:00:00 PM] Ana: hi\n"
+            "[9/1/26, 12:01:00 PM] Ben: forwarding\n"
+            "[15/10/26, 21:41:03] X: pasted\n"
+            "[9/14/26, 12:02:00 PM] Ana: later\n"
+        )
+        msgs = parse_whatsapp(text)
+        self.assertEqual([m.ts.date() for m in msgs],
+                         [datetime(2026, 9, 1).date(), datetime(2026, 9, 1).date(), datetime(2026, 9, 14).date()])
+        # the line that can't be a month-first date is part of Ben's message
+        self.assertEqual(msgs[1].text, "forwarding\n[15/10/26, 21:41:03] X: pasted")
+        self.assertEqual({m.author for m in msgs}, {"Ana", "Ben"})
+
+    def test_day_first_export_wins_the_vote(self):
+        text = "13/10/26, 21:41 - Ana: hi\n14/10/26, 07:02 - Ben: yo\n10/14/26, 08:00 - Cy: pasted US line\n"
+        msgs = parse_whatsapp(text)
+        self.assertEqual([m.ts.date() for m in msgs], [datetime(2026, 10, 13).date(), datetime(2026, 10, 14).date()])
+        self.assertIn("pasted US line", msgs[1].text)
+
+    def test_impossible_dates_never_crash(self):
+        msgs = parse_whatsapp("[2/30/26, 9:00:00 PM] Ana: impossible date\n[2/1/26, 9:00:00 PM] Ben: fine\n")
+        self.assertEqual([(m.author, m.text) for m in msgs], [("Ben", "fine")])
+        msgs = parse_whatsapp("[2/1/26, 9:00:00 PM] Ben: fine\n[2/1/26, 25:00:00] Ana: bad hour\n")
+        self.assertEqual([(m.author, m.text) for m in msgs], [("Ben", "fine\n[2/1/26, 25:00:00] Ana: bad hour")])
+
 
 class DiscordTests(unittest.TestCase):
     def test_exporter_shape(self):
