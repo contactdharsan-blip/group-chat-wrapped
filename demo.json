@@ -1,0 +1,540 @@
+{
+ "chat_name": "Floor 4 Survivors",
+ "result": {
+  "group": {
+   "messages": 1901,
+   "words": 7987,
+   "media": 53,
+   "people": 4,
+   "first": "2026-08-19T14:03:11",
+   "last": "2026-12-12T18:12:10",
+   "days": 116,
+   "busiest_hour": "6 PM",
+   "busiest_hour_messages": 290,
+   "busiest_weekday": "Saturday",
+   "busiest_weekday_messages": 387,
+   "share": {
+    "Maya": 603,
+    "Jordan": 578,
+    "Priya": 427,
+    "Theo": 293
+   }
+  },
+  "members": [
+   "Jordan",
+   "Maya",
+   "Priya",
+   "Theo"
+  ],
+  "awards": [
+   {
+    "key": "main_character",
+    "title": "Main Character",
+    "winner": "Maya",
+    "value_text": "603 messages, 32% of the whole chat",
+    "detail": "Once sent 10 in a row without anyone answering. It started like this:",
+    "receipt": {
+     "author": "Maya",
+     "ts": "2026-11-10T16:10:48",
+     "text": "ok I need to rant"
+    }
+   },
+   {
+    "key": "novelist",
+    "title": "The Novelist",
+    "winner": "Priya",
+    "value_text": "6.6 words per message on average; everyone else: 3.6",
+    "detail": "Longest message: 172 words.",
+    "receipt": {
+     "author": "Priya",
+     "ts": "2026-10-08T23:41:21",
+     "text": "Ok I have to tell you all about the new dining hall menu because I have Thoughts. First, the stir fry station.\nThey have changed the sauce. They didn't tell anyone. There was no announcement, no email, no small sign, nothing. It used to be sweet and a little spicy and now it's just brown. Brown is not a flavor. Second, the dessert section now has a \"chef's special\" every night and tonight it was a pudding that I can only describe as confident. It knew what it was. I respect it but I didn't enjoy it. Third, and this is the important one, they moved the cereal. The cereal has been in the same corner since the day we moved in and now it's next to the salad bar like it's trying to be healthy. It's not healthy. It's cereal. Let it be cereal.\nAnyway I wrote all of this in the feedback box and signed it \"a concerned resident of floor 4\" and I feel like I made a difference today"
+    }
+   },
+   {
+    "key": "three_am",
+    "title": "3 AM Philosopher",
+    "winner": "Priya",
+    "value_text": "22 messages sent between 1 and 5 AM",
+    "detail": "A highlight from the small hours:",
+    "receipt": {
+     "author": "Priya",
+     "ts": "2026-09-05T01:44:31",
+     "text": "ok so I've been thinking. if Bingus lives outside the dining hall, and the dining hall belongs to the university, then technically Bingus is enrolled here. he has better attendance than I do in orgo. he has never once missed a meal. he is thriving. what if we are the ones who are lost and Bingus is the only one who actually understands college"
+    }
+   },
+   {
+    "key": "omw",
+    "title": "“omw” (they were not)",
+    "winner": "Jordan",
+    "value_text": "said “omw” 87 times",
+    "detail": "Their next message came 1 h 42 min later.",
+    "receipt": {
+     "author": "Jordan",
+     "ts": "2026-11-21T18:02:31",
+     "text": "omw!! don't go in without me"
+    }
+   },
+   {
+    "key": "left_on_read",
+    "title": "Left On Read",
+    "winner": "Theo",
+    "value_text": "33 questions nobody answered within an hour",
+    "detail": "First reply from anyone: 3 days 14 h later.",
+    "receipt": {
+     "author": "Theo",
+     "ts": "2026-11-26T13:51:07",
+     "text": "happy thanksgiving! is anyone else's family asking about their grades or is it just mine?"
+    }
+   },
+   {
+    "key": "hype",
+    "title": "Hype Machine",
+    "winner": "Maya",
+    "value_text": "248 messages in ALL CAPS or with “!!!”",
+    "detail": "Exhibit A:",
+    "receipt": {
+     "author": "Maya",
+     "ts": "2026-11-21T21:13:25",
+     "text": "WE BEAT STATE!!! I AM NEVER SPEAKING AT A NORMAL VOLUME AGAIN!!!"
+    }
+   },
+   {
+    "key": "speed_demon",
+    "title": "Speed Demon",
+    "winner": "Maya",
+    "value_text": "median reply time: 15 seconds",
+    "detail": "Replied in 2 seconds.",
+    "receipt": {
+     "author": "Maya",
+     "ts": "2026-08-21T16:32:40",
+     "text": "obsessed"
+    },
+    "context": {
+     "author": "Theo",
+     "ts": "2026-08-21T16:32:38",
+     "text": "wait really"
+    }
+   },
+   {
+    "key": "ghost",
+    "title": "The Ghost",
+    "winner": "Theo",
+    "value_text": "only 293 messages, 15% of the chat",
+    "detail": "Their most efficient contribution:",
+    "receipt": {
+     "author": "Theo",
+     "ts": "2026-08-29T22:28:19",
+     "text": "k"
+    }
+   },
+   {
+    "key": "emoji",
+    "title": "Emoji of the Semester",
+    "winner": "Jordan",
+    "value_text": "💀 used 234 times, every single one by Jordan",
+    "detail": "Jordan loves it most:",
+    "receipt": {
+     "author": "Jordan",
+     "ts": "2026-11-21T21:17:00",
+     "text": "💀💀💀💀"
+    },
+    "emoji": "💀"
+   },
+   {
+    "key": "group_word",
+    "title": "Group Word",
+    "winner": "Theo",
+    "value_text": "“bingus”, said 162 times; Theo said it most (68)",
+    "detail": "Not even in the top 2,898 English words. Theo’s first time:",
+    "receipt": {
+     "author": "Theo",
+     "ts": "2026-08-21T19:12:51",
+     "text": "there is a cat outside the dining hall and I have decided his name is Bingus"
+    },
+    "word": "bingus"
+   },
+   {
+    "key": "busiest_day",
+    "title": "Busiest Day",
+    "winner": "Maya",
+    "value_text": "Saturday, November 21: 80 messages",
+    "detail": "The biggest burst (34 messages) started with Maya:",
+    "receipt": {
+     "author": "Maya",
+     "ts": "2026-11-21T20:40:52",
+     "text": "4TH QUARTER TIED"
+    },
+    "date": "2026-11-21"
+   }
+  ]
+ },
+ "profiles": [
+  {
+   "name": "Jordan",
+   "handle": "@jordan",
+   "initials": "J",
+   "hue": 273,
+   "messages": 578,
+   "posts": 2,
+   "awards": [
+    {
+     "key": "omw",
+     "title": "“omw” (they were not)"
+    },
+    {
+     "key": "emoji",
+     "title": "Emoji of the Semester"
+    }
+   ],
+   "peak_hour": "6 PM",
+   "top_emoji": [
+    {
+     "emoji": "💀",
+     "count": 234
+    }
+   ],
+   "top_words": [
+    {
+     "word": "bingus",
+     "count": 40
+    },
+    {
+     "word": "insane",
+     "count": 31
+    },
+    {
+     "word": "supremacy",
+     "count": 28
+    },
+    {
+     "word": "crazy",
+     "count": 26
+    },
+    {
+     "word": "stole",
+     "count": 25
+    }
+   ],
+   "receipts": [
+    {
+     "award_key": "omw",
+     "award_title": "“omw” (they were not)",
+     "text": "omw!! don't go in without me",
+     "ts": "2026-11-21T18:02:31",
+     "reactions": {}
+    },
+    {
+     "award_key": "emoji",
+     "award_title": "Emoji of the Semester",
+     "text": "💀💀💀💀",
+     "ts": "2026-11-21T21:17:00",
+     "reactions": {}
+    }
+   ]
+  },
+  {
+   "name": "Maya",
+   "handle": "@maya",
+   "initials": "M",
+   "hue": 237,
+   "messages": 603,
+   "posts": 4,
+   "awards": [
+    {
+     "key": "main_character",
+     "title": "Main Character"
+    },
+    {
+     "key": "hype",
+     "title": "Hype Machine"
+    },
+    {
+     "key": "speed_demon",
+     "title": "Speed Demon"
+    },
+    {
+     "key": "busiest_day",
+     "title": "Busiest Day"
+    }
+   ],
+   "peak_hour": "6 PM",
+   "top_emoji": [
+    {
+     "emoji": "😭",
+     "count": 29
+    }
+   ],
+   "top_words": [
+    {
+     "word": "bingus",
+     "count": 39
+    },
+    {
+     "word": "details",
+     "count": 30
+    },
+    {
+     "word": "funny",
+     "count": 27
+    },
+    {
+     "word": "screaming",
+     "count": 25
+    },
+    {
+     "word": "iconic",
+     "count": 23
+    }
+   ],
+   "receipts": [
+    {
+     "award_key": "main_character",
+     "award_title": "Main Character",
+     "text": "ok I need to rant",
+     "ts": "2026-11-10T16:10:48",
+     "reactions": {}
+    },
+    {
+     "award_key": "hype",
+     "award_title": "Hype Machine",
+     "text": "WE BEAT STATE!!! I AM NEVER SPEAKING AT A NORMAL VOLUME AGAIN!!!",
+     "ts": "2026-11-21T21:13:25",
+     "reactions": {}
+    },
+    {
+     "award_key": "speed_demon",
+     "award_title": "Speed Demon",
+     "text": "obsessed",
+     "ts": "2026-08-21T16:32:40",
+     "reactions": {}
+    },
+    {
+     "award_key": "busiest_day",
+     "award_title": "Busiest Day",
+     "text": "4TH QUARTER TIED",
+     "ts": "2026-11-21T20:40:52",
+     "reactions": {}
+    }
+   ]
+  },
+  {
+   "name": "Priya",
+   "handle": "@priya",
+   "initials": "P",
+   "hue": 314,
+   "messages": 427,
+   "posts": 2,
+   "awards": [
+    {
+     "key": "novelist",
+     "title": "The Novelist"
+    },
+    {
+     "key": "three_am",
+     "title": "3 AM Philosopher"
+    }
+   ],
+   "peak_hour": "6 PM",
+   "top_emoji": [
+    {
+     "emoji": "😭",
+     "count": 60
+    }
+   ],
+   "top_words": [
+    {
+     "word": "drama",
+     "count": 32
+    },
+    {
+     "word": "costs",
+     "count": 30
+    },
+    {
+     "word": "protect",
+     "count": 30
+    },
+    {
+     "word": "diary",
+     "count": 28
+    },
+    {
+     "word": "putting",
+     "count": 28
+    }
+   ],
+   "receipts": [
+    {
+     "award_key": "novelist",
+     "award_title": "The Novelist",
+     "text": "Ok I have to tell you all about the new dining hall menu because I have Thoughts. First, the stir fry station.\nThey have changed the sauce. They didn't tell anyone. There was no announcement, no email, no small sign, nothing. It used to be sweet and a little spicy and now it's just brown. Brown is not a flavor. Second, the dessert section now has a \"chef's special\" every night and tonight it was a pudding that I can only describe as confident. It knew what it was. I respect it but I didn't enjoy it. Third, and this is the important one, they moved the cereal. The cereal has been in the same corner since the day we moved in and now it's next to the salad bar like it's trying to be healthy. It's not healthy. It's cereal. Let it be cereal.\nAnyway I wrote all of this in the feedback box and signed it \"a concerned resident of floor 4\" and I feel like I made a difference today",
+     "ts": "2026-10-08T23:41:21",
+     "reactions": {}
+    },
+    {
+     "award_key": "three_am",
+     "award_title": "3 AM Philosopher",
+     "text": "ok so I've been thinking. if Bingus lives outside the dining hall, and the dining hall belongs to the university, then technically Bingus is enrolled here. he has better attendance than I do in orgo. he has never once missed a meal. he is thriving. what if we are the ones who are lost and Bingus is the only one who actually understands college",
+     "ts": "2026-09-05T01:44:31",
+     "reactions": {}
+    }
+   ]
+  },
+  {
+   "name": "Theo",
+   "handle": "@theo",
+   "initials": "T",
+   "hue": 206,
+   "messages": 293,
+   "posts": 4,
+   "awards": [
+    {
+     "key": "left_on_read",
+     "title": "Left On Read"
+    },
+    {
+     "key": "ghost",
+     "title": "The Ghost"
+    },
+    {
+     "key": "group_word",
+     "title": "Group Word"
+    }
+   ],
+   "peak_hour": "6 PM",
+   "top_emoji": [],
+   "top_words": [
+    {
+     "word": "bingus",
+     "count": 68
+    },
+    {
+     "word": "classic",
+     "count": 26
+    },
+    {
+     "word": "really",
+     "count": 18
+    },
+    {
+     "word": "coming",
+     "count": 17
+    },
+    {
+     "word": "huh",
+     "count": 17
+    }
+   ],
+   "receipts": [
+    {
+     "award_key": "left_on_read",
+     "award_title": "Left On Read",
+     "text": "happy thanksgiving! is anyone else's family asking about their grades or is it just mine?",
+     "ts": "2026-11-26T13:51:07",
+     "reactions": {}
+    },
+    {
+     "award_key": "speed_demon",
+     "award_title": "Speed Demon",
+     "text": "wait really",
+     "ts": "2026-08-21T16:32:38",
+     "reactions": {}
+    },
+    {
+     "award_key": "ghost",
+     "award_title": "The Ghost",
+     "text": "k",
+     "ts": "2026-08-29T22:28:19",
+     "reactions": {}
+    },
+    {
+     "award_key": "group_word",
+     "award_title": "Group Word",
+     "text": "there is a cat outside the dining hall and I have decided his name is Bingus",
+     "ts": "2026-08-21T19:12:51",
+     "reactions": {}
+    }
+   ]
+  }
+ ],
+ "group": {
+  "name": "Floor 4 Survivors",
+  "members": [
+   {
+    "name": "Jordan",
+    "handle": "@jordan",
+    "initials": "J",
+    "hue": 273
+   },
+   {
+    "name": "Maya",
+    "handle": "@maya",
+    "initials": "M",
+    "hue": 237
+   },
+   {
+    "name": "Priya",
+    "handle": "@priya",
+    "initials": "P",
+    "hue": 314
+   },
+   {
+    "name": "Theo",
+    "handle": "@theo",
+    "initials": "T",
+    "hue": 206
+   }
+  ],
+  "others": 0,
+  "busiest_day": {
+   "key": "busiest_day",
+   "title": "Busiest Day",
+   "winner": "Maya",
+   "value_text": "Saturday, November 21: 80 messages",
+   "detail": "The biggest burst (34 messages) started with Maya:",
+   "receipt": {
+    "author": "Maya",
+    "ts": "2026-11-21T20:40:52",
+    "text": "4TH QUARTER TIED"
+   },
+   "date": "2026-11-21"
+  },
+  "group_word": {
+   "key": "group_word",
+   "title": "Group Word",
+   "winner": "Theo",
+   "value_text": "“bingus”, said 162 times; Theo said it most (68)",
+   "detail": "Not even in the top 2,898 English words. Theo’s first time:",
+   "receipt": {
+    "author": "Theo",
+    "ts": "2026-08-21T19:12:51",
+    "text": "there is a cat outside the dining hall and I have decided his name is Bingus"
+   },
+   "word": "bingus"
+  }
+ },
+ "captions": {
+  "source": "template",
+  "awards": {
+   "main_character": "Maya carried this chat. 603 messages.",
+   "novelist": "Priya doesn't text, Priya publishes.",
+   "three_am": "Priya does their best thinking when everyone else is asleep.",
+   "omw": "Jordan said “omw” 87 times. The group is still waiting.",
+   "left_on_read": "Theo kept asking. The chat kept not answering.",
+   "hype": "Maya has one volume setting, and it's this one.",
+   "speed_demon": "Maya replies before you've finished the thought.",
+   "ghost": "Theo said little, and made it count.",
+   "emoji": "One emoji ruled the semester, and Jordan is its biggest fan.",
+   "group_word": "Every group has a word. Theo made sure this was yours.",
+   "busiest_day": "The day the chat lost it, and Maya started it."
+  },
+  "bios": {
+   "Jordan": "578 messages, mostly around 6 PM. Holder of “omw” (they were not) and Emoji of the Semester.",
+   "Maya": "603 messages, mostly around 6 PM. Holder of Main Character, Hype Machine, Speed Demon and Busiest Day.",
+   "Priya": "427 messages, mostly around 6 PM. Holder of The Novelist and 3 AM Philosopher.",
+   "Theo": "293 messages, mostly around 6 PM. Holder of Left On Read, The Ghost and Group Word."
+  }
+ },
+ "demo": true
+}
