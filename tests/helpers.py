@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from wrapped.model import Message
-from wrapped.stats import Redactor
+from wrapped.stats import Redactor, hidden_names
 
 
 def M(author, when, text="", **kw):
@@ -16,8 +16,7 @@ def chat(*rows):
 def assert_receipts_real(test, result, messages):
     """Every receipt (and context bubble) is a real message from the input,
     up to the redaction of non-opted names."""
-    hidden = {m.author for m in messages} - set(result["members"])
-    redact = Redactor(hidden)
+    redact = Redactor(hidden_names(messages, set(result["members"])))
     real = {(m.author, m.ts.isoformat(), redact(m.text)) for m in messages}
     for award in result["awards"]:
         for key in ("receipt", "context"):

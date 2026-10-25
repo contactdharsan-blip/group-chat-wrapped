@@ -13,7 +13,7 @@ import re
 from collections import Counter
 
 from .model import Message
-from .stats import CHAT_SLANG, EMOJI, STOPWORDS, english_ranks, fmt_hour, words
+from .stats import CHAT_SLANG, EMOJI, STOPWORDS, english_ranks, fmt_hour, name_words, words
 
 TOP_WORDS = 5
 TOP_EMOJI = 3
@@ -41,7 +41,7 @@ def _reactions(by_key: dict, receipt: dict) -> dict[str, int]:
 
 def build(messages: list[Message], result: dict) -> list[dict]:
     members = list(result["members"])
-    name_tokens = {t for m in messages for t in words(m.author)}
+    name_tokens = name_words(messages, members)
     by_key = {(m.author, m.ts.isoformat()): m for m in messages}
     ranks = english_ranks()
     mine: dict[str, list[Message]] = {name: [] for name in members}

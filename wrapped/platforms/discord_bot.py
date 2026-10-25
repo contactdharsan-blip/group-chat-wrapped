@@ -22,6 +22,7 @@ import asyncio
 import colorsys
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -74,12 +75,28 @@ class OptinStore:
         return removed
 
 
+_MENTION = re.compile(r"<@!?(\d+)>|<@&\d+>|<#\d+>")
+
+
+def _resolve_mentions(text: str, names: dict[str, str]) -> str:
+    """Discord shows <@id> as the user's name, so a raw mention would name them.
+    Opted-in users become @their name; other users and roles become "someone"."""
+    def sub(m: re.Match) -> str:
+        if m.group(0).startswith("<#"):
+            return "#channel"
+        name = names.get(m.group(1)) if m.group(1) else None
+        return f"@{name}" if name else stats.SOMEONE
+    return _MENTION.sub(sub, text)
+
+
 def to_message(dm, names: dict[str, str]) -> Message | None:
     """A discord.Message as a Message, or None for bots and system notices.
 
     Opted-in authors keep the name they opted in under, so a later nickname
-    change doesn't drop them; everyone else gets their current display name
-    (and the pipeline shows them only as "someone")."""
+    change doesn't drop them. Everyone else is keyed by id ("user:<id>"),
+    which is never shown, so someone who didn't opt in can't merge into an
+    opted-in member by taking their display name; their names ride along as
+    aliases only so they can be scrubbed from quotes."""
     if getattr(dm.author, "bot", False):
         return None
     if getattr(dm.type, "name", "default") not in ("default", "reply"):
@@ -89,14 +106,21 @@ def to_message(dm, names: dict[str, str]) -> Message | None:
     for r in getattr(dm, "reactions", None) or []:
         key = str(r.emoji)
         reactions[key] = reactions.get(key, 0) + int(r.count)
+    uid = str(dm.author.id)
+    if uid in names:
+        author, aliases = names[uid], ()
+    else:
+        seen = (getattr(dm.author, "display_name", None), getattr(dm.author, "name", None))
+        author, aliases = f"user:{uid}", tuple(dict.fromkeys(n for n in seen if n))
     return Message(
         # created_at is aware UTC; the pipeline wants this machine's wall clock.
         ts=dm.created_at.astimezone().replace(tzinfo=None),
-        author=names.get(str(dm.author.id), dm.author.display_name),
-        text=dm.content or "",
+        author=author,
+        text=_resolve_mentions(dm.content or "", names),
         reply_to=str(ref.message_id) if ref is not None and getattr(ref, "message_id", None) else None,
         reactions=reactions,
         attachments=len(getattr(dm, "attachments", None) or []),
+        aliases=aliases,
     )
 
 

@@ -61,8 +61,59 @@ class ConversionTests(unittest.TestCase):
         self.assertIsNone(m.ts.tzinfo)
         self.assertEqual(m.ts, T0.astimezone().replace(tzinfo=None))
 
-    def test_unopted_authors_keep_their_display_name(self):
-        self.assertEqual(to_message(fake_msg(1, 12, "jordan", "hi"), {"11": "Maya"}).author, "jordan")
+    def test_unopted_authors_are_keyed_by_id_not_display_name(self):
+        # Their display name is kept only to scrub it from quotes, never as the author.
+        m = to_message(fake_msg(1, 12, "jordan", "hi"), {"11": "Maya"})
+        self.assertEqual(m.author, "user:12")
+        self.assertIn("jordan", m.aliases)
+
+    def test_mentions_become_names_only_for_opted_in_users(self):
+        dm = fake_msg(1, 11, "Maya", "<@2> and <@!3> are you coming?? ask <@11> or <@&77> in <#55>")
+        m = to_message(dm, {"11": "Maya"})
+        self.assertEqual(m.text, "someone and someone are you coming?? ask @Maya or someone in #channel")
+
+    def test_raw_mention_of_unopted_user_never_reaches_an_embed(self):
+        from wrapped import captions, profiles
+        from wrapped.platforms.discord_bot import award_embeds
+        from wrapped.stats import compute
+        dms = []
+        for i in range(12):
+            dms.append(fake_msg(2 * i, 1, "Maya", "<@2> are you coming tonight?? <@2>", minutes=180 * i))
+            dms.append(fake_msg(2 * i + 1, 2, "SecretSam", "maybe", minutes=180 * i + 90))
+        names = {"1": "Maya"}
+        msgs = [to_message(d, names) for d in dms]
+        res = compute(msgs, set(names.values()))
+        people = profiles.build(msgs, res)
+        embeds = award_embeds(res, people, captions.templates(res["awards"], people))
+        self.assertTrue(embeds)
+        blob = str(embeds)
+        self.assertNotIn("<@", blob)
+        self.assertNotIn("SecretSam", blob)
+        self.assertIn("someone are you coming tonight?? someone", blob)
+
+    def test_unopted_display_names_are_still_scrubbed_from_quotes(self):
+        from wrapped.stats import compute
+        names = {"1": "Maya"}
+        dms = [fake_msg(1, 1, "Maya", "is Jordan coming? jordan??"), fake_msg(2, 2, "Jordan", "no", minutes=1)]
+        res = compute([to_message(d, names) for d in dms], set(names.values()))
+        self.assertTrue(res["awards"])
+        for a in res["awards"]:
+            self.assertEqual(a["receipt"]["text"], "is someone coming? someone??")
+
+    def test_unopted_user_with_an_opted_in_display_name_is_not_merged(self):
+        from wrapped.stats import compute
+        names = {"1": "Maya"}
+        dms = [
+            fake_msg(1, 1, "Maya", "real maya says hi"),
+            fake_msg(2, 3, "Maya", "IMPOSTOR MESSAGE nobody consented to!!!", minutes=1),
+        ]
+        msgs = [to_message(d, names) for d in dms]
+        res = compute(msgs, set(names.values()))
+        self.assertEqual(res["members"], ["Maya"])
+        self.assertEqual(res["group"]["share"], {"Maya": 1, "someone": 1})
+        blob = str(res)
+        self.assertNotIn("IMPOSTOR", blob)
+        self.assertNotIn("user:3", blob)
 
     def test_skips_bots_and_system_messages(self):
         self.assertIsNone(to_message(fake_msg(1, 99, "Wrapped", "here you go", bot=True), {}))

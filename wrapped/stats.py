@@ -140,11 +140,25 @@ def match_optins(authors, opted_in) -> set[str]:
     return named
 
 
+def hidden_names(messages: list[Message], named) -> set[str]:
+    """Every name the people who didn't opt in go by: their author name, or,
+    for an author keyed by id, the names in its aliases (the id is never shown)."""
+    aliases: dict[str, set[str]] = defaultdict(set)
+    for m in messages:
+        aliases[m.author].update(m.aliases)
+    return {n for a, names in aliases.items() if a not in named for n in (names or {a})}
+
+
+def name_words(messages: list[Message], named) -> set[str]:
+    """The lowercase words in everyone's names, opted in or not."""
+    return {w for n in set(named) | hidden_names(messages, named) for w in words(n)}
+
+
 def compute(messages: list[Message], opted_in: set[str] | None = None) -> dict:
     messages = sorted(messages, key=lambda m: m.ts)
     authors = {m.author for m in messages}
     named = match_optins(authors, opted_in)
-    redact = Redactor(authors - named)
+    redact = Redactor(hidden_names(messages, named))
     ctx = _Context(messages, named, redact)
 
     awards = [
@@ -427,7 +441,7 @@ def _emoji(ctx):
 
 
 def _group_word(ctx):
-    name_tokens = {t for a in ctx.by_author for t in words(a)}
+    name_tokens = name_words(ctx.messages, ctx.named)
     counts: Counter[str] = Counter()
     users: dict[str, set[str]] = defaultdict(set)
     total = 0
