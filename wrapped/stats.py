@@ -258,6 +258,21 @@ def _first_by(items, key):
     return max(items, key=lambda m: (key(m), -_secs(m.ts)))
 
 
+def plural(n: int, word: str) -> str:
+    return f"{n:,} {word}{'' if n == 1 else 's'}"
+
+
+def _named(ctx, scores: dict) -> dict:
+    return {a: v for a, v in scores.items() if a in ctx.named}
+
+
+def _among(ctx, scores: dict, w: str, lowest=False, word="most") -> str:
+    """Scores cover everyone; when someone who didn't opt in beat the winner,
+    the value text says the award is only among people who opted in."""
+    beaten = any(v < scores[w] if lowest else v > scores[w] for a, v in scores.items() if a not in ctx.named)
+    return f"; the {word} among people who opted in" if beaten else ""
+
+
 def _award(ctx, key, title, winner, value_text, receipt_msg, detail="", context_msg=None):
     a = {
         "key": key,
@@ -300,8 +315,8 @@ def _group_totals(ctx: _Context) -> dict:
 # ------------------------------------------------------------------ awards ---
 
 def _main_character(ctx):
-    scores = {a: len(ctx.by_author[a]) for a in ctx.named if ctx.by_author[a]}
-    w = _pick(scores)
+    scores = {a: len(ms) for a, ms in ctx.by_author.items()}
+    w = _pick(_named(ctx, scores))
     if not w:
         return None
     # Receipt: the opening line of their longest uninterrupted run in one
@@ -322,46 +337,50 @@ def _main_character(ctx):
     pct = round(100 * scores[w] / len(ctx.messages))
     return _award(
         ctx, "main_character", "Main Character", w,
-        f"{scores[w]:,} messages, {pct}% of the whole chat",
+        f"{plural(scores[w], 'message')}, {pct}% of the whole chat" + _among(ctx, scores, w),
         best_start, detail=f"Once sent {best_len} in a row without anyone answering. It started like this:",
     )
 
 
 def _novelist(ctx):
     avgs = {}
-    for a in ctx.named:
+    for a in ctx.by_author:
         texts = ctx.mine(a)
         if len(texts) >= MIN_SAMPLE:
             avgs[a] = sum(len(words(m.text)) for m in texts) / len(texts)
-    w = _pick(avgs)
+    w = _pick(_named(ctx, avgs))
     if not w:
         return None
     longest = _first_by(ctx.mine(w), lambda m: len(words(m.text)))
     rest = [m for m in ctx.messages if m.author != w and m.text.strip()]
-    rest_avg = sum(len(words(m.text)) for m in rest) / len(rest) if rest else 0
+    value = f"{avgs[w]:.1f} words per message on average"
+    if rest:  # in a one-person chat there is no "everyone else"
+        value += f"; everyone else: {sum(len(words(m.text)) for m in rest) / len(rest):.1f}"
     return _award(
         ctx, "novelist", "The Novelist", w,
-        f"{avgs[w]:.1f} words per message on average; everyone else: {rest_avg:.1f}",
-        longest, detail=f"Longest message: {len(words(longest.text))} words.",
+        value + _among(ctx, avgs, w, word="highest"),
+        longest, detail=f"Longest message: {plural(len(words(longest.text)), 'word')}.",
     )
 
 
 def _three_am(ctx):
-    late = {a: [m for m in ctx.mine(a) if m.ts.hour in LATE_NIGHT] for a in ctx.named}
-    w = _pick({a: len(v) for a, v in late.items() if v})
+    late = {a: [m for m in ctx.mine(a) if m.ts.hour in LATE_NIGHT] for a in ctx.by_author}
+    counts = {a: len(v) for a, v in late.items() if v}
+    w = _pick(_named(ctx, counts))
     if not w:
         return None
     best = _first_by(late[w], lambda m: len(words(m.text)))
     return _award(
         ctx, "three_am", "3 AM Philosopher", w,
-        f"{len(late[w])} messages sent between 1 and 5 AM",
+        f"{plural(counts[w], 'message')} sent between 1 and 5 AM" + _among(ctx, counts, w),
         best, detail="A highlight from the small hours:",
     )
 
 
 def _omw(ctx):
-    omws = {a: [m for m in ctx.mine(a) if OMW.search(m.text)] for a in ctx.named}
-    w = _pick({a: len(v) for a, v in omws.items() if v})
+    omws = {a: [m for m in ctx.mine(a) if OMW.search(m.text)] for a in ctx.by_author}
+    counts = {a: len(v) for a, v in omws.items() if v}
+    w = _pick(_named(ctx, counts))
     if not w:
         return None
     # Receipt: the "omw" they took longest to follow up on (within 3 hours).
@@ -375,10 +394,9 @@ def _omw(ctx):
 
     best = _first_by(omws[w], wait)
     detail = f"Their next message came {fmt_duration(wait(best))} later." if wait(best) else ""
-    n = len(omws[w])
     return _award(
         ctx, "omw", "“omw” (they were not)", w,
-        f"said “omw” {n} time{'s' if n != 1 else ''}",
+        f"said “omw” {plural(counts[w], 'time')}" + _among(ctx, counts, w),
         best, detail=detail,
     )
 
@@ -395,33 +413,34 @@ def _silence_after(ctx, i: int) -> timedelta | None:
 def _left_on_read(ctx):
     ignored: dict[str, list[tuple[Message, timedelta | None]]] = defaultdict(list)
     for i, m in enumerate(ctx.messages):
-        if m.author in ctx.named and is_question(m.text):
+        if is_question(m.text):
             gap = _silence_after(ctx, i)
             if gap is None or gap > LEFT_ON_READ_WINDOW:
                 ignored[m.author].append((m, gap))
-    w = _pick({a: len(v) for a, v in ignored.items()})
+    counts = {a: len(v) for a, v in ignored.items()}
+    w = _pick(_named(ctx, counts))
     if not w:
         return None
     forever = timedelta(days=100000)
     m, gap = max(ignored[w], key=lambda mg: (mg[1] or forever, -_secs(mg[0].ts)))
     detail = "Nobody ever answered." if gap is None else f"First reply from anyone: {fmt_duration(gap)} later."
-    n = len(ignored[w])
     return _award(
         ctx, "left_on_read", "Left On Read", w,
-        f"{n} question{'s' if n != 1 else ''} nobody answered within an hour",
+        f"{plural(counts[w], 'question')} nobody answered within an hour" + _among(ctx, counts, w),
         m, detail=detail,
     )
 
 
 def _hype(ctx):
-    hype = {a: [m for m in ctx.mine(a) if is_hype(m.text)] for a in ctx.named}
-    w = _pick({a: len(v) for a, v in hype.items() if v})
+    hype = {a: [m for m in ctx.mine(a) if is_hype(m.text)] for a in ctx.by_author}
+    counts = {a: len(v) for a, v in hype.items() if v}
+    w = _pick(_named(ctx, counts))
     if not w:
         return None
     best = _first_by(hype[w], lambda m: sum(c.isupper() for c in m.text) + m.text.count("!"))
     return _award(
         ctx, "hype", "Hype Machine", w,
-        f"{len(hype[w])} messages in ALL CAPS or with “!!!”",
+        f"{plural(counts[w], 'message')} in ALL CAPS or with “!!!”" + _among(ctx, counts, w),
         best, detail="Exhibit A:",
     )
 
@@ -430,14 +449,14 @@ def _speed_demon(ctx):
     replies: dict[str, list[tuple[timedelta, Message, Message]]] = defaultdict(list)
     for prev, m in zip(ctx.messages, ctx.messages[1:]):
         gap = m.ts - prev.ts
-        if m.author != prev.author and gap <= REPLY_WINDOW and m.author in ctx.named and m.text.strip():
+        if m.author != prev.author and gap <= REPLY_WINDOW and m.text.strip():
             replies[m.author].append((gap, m, prev))
     medians = {
         a: statistics.median(g.total_seconds() for g, _, _ in r)
         for a, r in replies.items()
         if len(r) >= MIN_REPLIES
     }
-    w = _pick(medians, lowest=True)
+    w = _pick(_named(ctx, medians), lowest=True)
     if not w:
         return None
     # Receipt: their fastest reply, preferring one to a named member (context is shown).
@@ -447,21 +466,29 @@ def _speed_demon(ctx):
     context = prev if prev.author in ctx.named and prev.text.strip() else None
     return _award(
         ctx, "speed_demon", "Speed Demon", w,
-        f"median reply time: {fmt_duration(timedelta(seconds=medians[w]))}",
+        f"median reply time: {fmt_duration(timedelta(seconds=medians[w]))}"
+        + _among(ctx, medians, w, lowest=True, word="fastest"),
         reply, detail=f"Replied in {fmt_duration(gap)}.", context_msg=context,
     )
 
 
 def _ghost(ctx):
-    counts = {a: len(ctx.by_author[a]) for a in ctx.named if ctx.mine(a)}
-    if len(counts) < 2:
+    # Never the Main Character too: they compete on the same count, so in a
+    # tie one person would win both. The Ghost has strictly fewer messages.
+    main = _pick({a: len(ctx.by_author[a]) for a in ctx.named if ctx.by_author[a]})
+    if main is None:
         return None
-    w = _pick(counts, lowest=True)
+    counts = {a: len(ms) for a, ms in ctx.by_author.items() if ctx.mine(a)}
+    eligible = {a: n for a, n in _named(ctx, counts).items() if a != main and n < len(ctx.by_author[main])}
+    w = _pick(eligible, lowest=True)
+    if not w:
+        return None
     shortest = min(ctx.mine(w), key=lambda m: (len(m.text.strip()), m.ts))
     total = len(ctx.messages)
     return _award(
         ctx, "ghost", "The Ghost", w,
-        f"only {counts[w]:,} messages, {100 * counts[w] / total:.0f}% of the chat",
+        f"only {plural(counts[w], 'message')}, {100 * counts[w] / total:.0f}% of the chat"
+        + _among(ctx, counts, w, lowest=True, word="fewest"),
         shortest, detail="Their most efficient contribution:",
     )
 
@@ -474,15 +501,16 @@ def _emoji(ctx):
     def uses(m):  # whole emoji only, so a plain 👍 isn't counted inside 👍🏽
         return EMOJI.findall(m.text).count(top)
 
-    per = {a: sum(uses(m) for m in ctx.mine(a)) for a in ctx.named}
-    w = _pick({a: n for a, n in per.items() if n})
+    per = {a: n for a in ctx.by_author if (n := sum(uses(m) for m in ctx.mine(a)))}
+    w = _pick(_named(ctx, per))
     if not w:
         return None
     best = _first_by([m for m in ctx.mine(w) if uses(m)], uses)
     return _award(
         ctx, "emoji", "Emoji of the Semester", w,
-        f"{top} used {overall[top]:,} times"
-        + (f", every single one by {w}" if per[w] == overall[top] else f", {per[w]:,} of them by {w}"),
+        f"{top} used {plural(overall[top], 'time')}"
+        + (f", every single one by {w}" if per[w] == overall[top] else f", {per[w]:,} of them by {w}")
+        + _among(ctx, per, w),
         best, detail=f"{w} loves it most:",
     ) | {"emoji": top}
 
@@ -517,8 +545,8 @@ def _group_word(ctx):
         return None
     word = min(candidates, key=lambda wd: (-candidates[wd], wd))
     pattern = re.compile(rf"\b{re.escape(word)}\b", re.IGNORECASE)
-    per = {a: sum(len(pattern.findall(m.text)) for m in ctx.mine(a)) for a in ctx.named}
-    w = _pick({a: n for a, n in per.items() if n})
+    per = {a: n for a in ctx.by_author if (n := sum(len(pattern.findall(m.text)) for m in ctx.mine(a)))}
+    w = _pick(_named(ctx, per))
     if not w:
         return None
     first = min((m for m in ctx.mine(w) if pattern.search(m.text)), key=lambda m: m.ts)
@@ -531,7 +559,8 @@ def _group_word(ctx):
         detail = f"Not even in the top {len(ranks):,} English words."
     return _award(
         ctx, "group_word", "Group Word", w,
-        f"“{word}”, said {counts[word]:,} times; {w} said it most ({per[w]:,})",
+        f"“{word}”, said {counts[word]:,} times; {w} said it most"
+        + (" of anyone who opted in" if _among(ctx, per, w) else "") + f" ({per[w]:,})",
         first, detail=detail + f" {w}’s first time:",
     ) | {"word": word}
 
@@ -558,6 +587,6 @@ def _busiest_day(ctx):
         return None
     return _award(
         ctx, "busiest_day", "Busiest Day", opener.author,
-        f"{day.strftime('%A, %B')} {day.day}: {len(by_day[day]):,} messages",
-        opener, detail=f"The biggest burst ({len(biggest)} messages) started with {opener.author}:",
+        f"{day.strftime('%A, %B')} {day.day}: {plural(len(by_day[day]), 'message')}",
+        opener, detail=f"The biggest burst ({plural(len(biggest), 'message')}) started with {opener.author}:",
     ) | {"date": day.isoformat()}

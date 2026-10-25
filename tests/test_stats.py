@@ -183,6 +183,42 @@ class AwardTests(unittest.TestCase):
         self.assertEqual(a["receipt"]["text"], "k")
         self.assertIsNone(award(compute(msgs, {"Ana"}), "ghost"))  # needs two candidates
 
+    def test_tied_main_character_is_not_also_the_ghost(self):
+        rows = []
+        for i in range(6):
+            rows += [("Zed", f"2026-09-01 10:{i:02d}", "same?"), ("Amy", f"2026-09-01 10:{i:02d}:10", "same?")]
+        result = compute(chat(*rows), {"Zed", "Amy"})
+        self.assertEqual(award(result, "main_character")["winner"], "Amy")
+        self.assertIsNone(award(result, "ghost"))  # nobody has fewer messages than the Main Character
+        rows.append(("Cy", "2026-09-02 10:00", "k"))
+        result = compute(chat(*rows), {"Zed", "Amy", "Cy"})
+        self.assertEqual(award(result, "ghost")["winner"], "Cy")
+
+    def test_singular_and_one_person_wording(self):
+        msgs = chat(("Solo", "2026-09-01 03:00", "note to self?"), ("Solo", "2026-09-01 12:00", "two"),
+                    ("Solo", "2026-09-01 12:01", "three"))
+        result = compute(msgs, {"Solo"})
+        self.assertEqual(award(result, "three_am")["value_text"], "1 message sent between 1 and 5 AM")
+        self.assertEqual(award(result, "novelist")["value_text"], "1.7 words per message on average")
+        self.assertEqual(award(result, "novelist")["detail"], "Longest message: 3 words.")
+        one = compute(chat(("Ana", "2026-09-01 10:00", "hi")), {"Ana"})
+        self.assertEqual(award(one, "main_character")["value_text"], "1 message, 100% of the whole chat")
+        two = compute(chat(("Ana", "2026-09-01 10:00", "hi"), ("Ana", "2026-09-01 10:01", "yo"),
+                           ("Ben", "2026-09-01 10:02", "k")), {"Ana", "Ben"})
+        self.assertEqual(award(two, "ghost")["value_text"], "only 1 message, 33% of the chat")
+        self.assertEqual(award(two, "busiest_day")["value_text"], "Tuesday, September 1: 3 messages")
+
+    def test_value_says_among_opted_in_when_someone_hidden_did_more(self):
+        rows = [("Zed", f"2026-09-01 03:0{i}", f"WHO IS UP!!! {'word ' * 30}") for i in range(4)]
+        rows += [("Ana", "2026-09-01 03:30", "ME!!! long night"), ("Ana", "2026-09-01 10:00", "ok"),
+                 ("Ben", "2026-09-01 10:01", "k")]
+        result = compute(chat(*rows), {"Ana", "Ben"})
+        for key in ("main_character", "three_am", "hype"):
+            self.assertTrue(award(result, key)["value_text"].endswith("; the most among people who opted in"), key)
+        self.assertNotIn("opted in", award(result, "ghost")["value_text"])  # nobody hidden has fewer
+        alone = compute(chat(*rows[4:]), {"Ana", "Ben"})
+        self.assertNotIn("opted in", award(alone, "main_character")["value_text"])
+
     def test_emoji(self):
         msgs = chat(
             ("Ana", "2026-09-01 10:00", "\U0001F62D\U0001F62D"),
