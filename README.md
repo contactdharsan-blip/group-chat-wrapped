@@ -96,8 +96,8 @@ What is guaranteed:
   has it, so a "maya" never inherits "Maya"'s consent.
 - In quoted text, the names of people who didn't opt in are replaced with "someone":
   - their full name, and each part of it with 3+ letters, in any case;
-  - a part that is an ordinary English word ("Will", "Grace") only when capitalised, so "I will be
-    there" stays as written;
+  - a part that is an ordinary English word ("Will", "Grace") only when written like a name, so
+    "I will be there" stays as written;
   - capitalised nicknames that start their first name ("Kay" for Kayla), except ordinary words and
     names of people who opted in;
   - phone numbers (10 to 15 digits) and @-mentions made of digits, always.
@@ -107,10 +107,11 @@ What is guaranteed:
   display name, so taking an opted-in member's display name doesn't merge you into them.
 
 What isn't: redaction works from names, so a nickname that doesn't start the first name ("Bob" for
-Robert, "Will" for William), a misspelling, or a description ("her roommate") can still appear inside a
-quote from someone who opted in. When it's unsure it redacts: an opted-in member's name is replaced too
-if someone who didn't opt in shares it, and so is a month written "Jan" when a hidden member is called
-Janet.
+Robert, "Will" for William), a name that is an ordinary word written in ALL CAPS ("WILL"), a
+misspelling, or a description ("her roommate") can still appear inside a quote from someone who opted
+in. When it's unsure it redacts: an opted-in member's name is replaced too if someone who didn't opt in
+shares it, a month written "Jan" is replaced when a hidden member is called Janet, and so is a date
+and time written with dashes ("2026-10-24 10:30"), which looks like a phone number.
 
 - The CLI runs locally, with no network calls and no accounts. Nothing is uploaded. The Discord bot
   and the iMessage bridge post the finished slides back into the chat they were run in, and nowhere else.
