@@ -113,8 +113,7 @@ async function demoTour(browser, base, size) {
   check(await page.getByTestId('story-ring').count() === 4, `${size.name}: 4 person story rings + group`);
   await shot(page, size.name, '03-feed');
   await noHorizontalScroll(page, `${size.name} feed`);
-  await page.getByTestId('like').first().click();
-  check((await page.getByTestId('like').first().getAttribute('aria-pressed')) === 'true', `${size.name}: like toggles locally`);
+  check(await page.getByTestId('like').count() === 0, `${size.name}: no like counter on the feed`);
 
   await page.getByTestId('post-avatar').first().click();
   await page.getByTestId('screen-profile').waitFor();

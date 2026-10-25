@@ -1,6 +1,5 @@
 import { motion } from 'motion/react';
-import { Heart, Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { Sparkles } from 'lucide-react';
 import type { Award, Profile, Wrapped } from '../types';
 import { Avatar, Bubble, CountValue } from '../components/bits';
 import { staggerContainer, staggerItem } from '../motion';
@@ -31,7 +30,6 @@ export function StoriesRow({ data, onPlay }: { data: Wrapped; onPlay: (who: stri
 }
 
 function PostCard({ a, p, caption, featured, onProfile }: { a: Award; p: Profile | undefined; caption: string; featured: boolean; onProfile: (n: string) => void }) {
-  const [liked, setLiked] = useState(false);
   return (
     <motion.article variants={staggerItem} data-testid="feed-post">
     <Card className={`gap-0 py-0 text-base ${featured ? 'shadow-lg' : ''}`}>
@@ -60,19 +58,8 @@ function PostCard({ a, p, caption, featured, onProfile }: { a: Award; p: Profile
         {a.context && <Bubble r={a.context} lines={3} />}
         <Bubble r={a.receipt} reply={!!a.context} lines={5} />
       </div>
-      <footer className="mt-4 flex items-start gap-3 border-t-2 border-black bg-muted/50 px-4 py-3">
-        <button
-          type="button"
-          onClick={() => setLiked(!liked)}
-          aria-pressed={liked}
-          aria-label={liked ? 'Unlike' : 'Like'}
-          className="flex min-h-[44px] flex-none items-center gap-1.5 rounded-full px-1 text-sm font-bold"
-          data-testid="like"
-        >
-          <Heart size={22} strokeWidth={2.5} className={`transition-transform duration-100 ${liked ? 'scale-110 fill-pink' : ''}`} aria-hidden="true" />
-          <span className="tabular">{liked ? 1 : 0}</span>
-        </button>
-        <p className="min-w-0 flex-1 pt-2.5 text-sm leading-relaxed">
+      <footer className="mt-4 border-t-2 border-black bg-muted/50 px-4 py-3">
+        <p className="text-sm leading-relaxed">
           <Sparkles size={13} className="mr-1 inline" aria-hidden="true" />
           {caption}
         </p>
