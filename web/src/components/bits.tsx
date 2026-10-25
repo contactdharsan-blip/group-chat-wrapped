@@ -51,7 +51,8 @@ export function CountValue({ text, className = '' }: { text: string; className?:
   const [shown, setShown] = useState(safe && n !== null ? 0 : n ?? 0);
   useEffect(() => {
     if (n === null || !inView) return;
-    if (!safe) { setShown(n); return; }
+    // A background tab never paints the animation's frames, so show the real number there.
+    if (!safe || document.hidden) { setShown(n); return; }
     const c = animate(0, n, { duration: 1.1, ease: [0.16, 1, 0.3, 1], onUpdate: setShown });
     return () => c.stop();
   }, [n, inView, safe]);
