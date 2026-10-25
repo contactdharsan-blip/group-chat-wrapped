@@ -92,26 +92,36 @@ What is guaranteed:
 
 - Only people who opted in can win, be quoted, or be named. Everyone else still counts in the group
   totals, as "someone".
+- Every receipt is a real message. A message is never rewritten beyond swapping a name for "someone";
+  if it can't be cleaned that way, it isn't quoted at all and the award uses its next-best message (or
+  is left out).
 - Opt-in names match exactly. A name that differs only in case matches only when one person in the chat
   has it, so a "maya" never inherits "Maya"'s consent.
-- In quoted text, the names of people who didn't opt in are replaced with "someone":
-  - their full name, and each part of it with 3+ letters, in any case;
-  - a part that is an ordinary English word ("Will", "Grace") only when written like a name, so
-    "I will be there" stays as written;
+- Names are split into their letter runs, so "kayla.brooks", "Kayla🌸" and "@kayla_b" all count as
+  Kayla (and Brooks), and they're found in text next to dots, underscores, digits or emoji.
+- In a quoted message, these become "someone":
+  - the name of someone who didn't opt in as written, and each 3+ letter part of it, in any case
+    ("Kayla", "KAYLA", "kayla", "Kayla's");
+  - a part that is an ordinary English word ("Will", "Mark", "Grace") when capitalised;
   - capitalised nicknames that start their first name ("Kay" for Kayla), except ordinary words and
-    names of people who opted in;
-  - phone numbers (10 to 15 digits) and @-mentions made of digits, always.
-- Profile top words and the Group Word never use those names or nicknames.
+    parts of opted-in names.
+- These make a message unquotable, because "someone" would be a guess:
+  - an ordinary-word part or a nickname in any other casing ("mark", "WILL", "kay"), so "I will be
+    there" is neither mangled nor quoted when a Will didn't opt in;
+  - a longer word that starts with a 4+ letter part ("kaylas", "Kaylaaa");
+  - a name part that an opted-in member's name shares;
+  - a phone number: +country groups, (555) 123-4567 with single separators, a run of 10 to 15 digits,
+    or an @-mention of 7+ digits. Other numbers ("@7pm", "100 100 100") are quoted as written.
+- Profile top words and the Group Word never use those names, nicknames or longer variants.
 - Discord: a mention (`<@id>`) is resolved when the message is read: someone who opted in becomes
   `@name`, anyone else "someone". People who didn't opt in are tracked by their user id, never by their
-  display name, so taking an opted-in member's display name doesn't merge you into them.
+  display name, and their nick, global name and username are all treated as their names.
 
 What isn't: redaction works from names, so a nickname that doesn't start the first name ("Bob" for
-Robert, "Will" for William), a name that is an ordinary word written in ALL CAPS ("WILL"), a
-misspelling, or a description ("her roommate") can still appear inside a quote from someone who opted
-in. When it's unsure it redacts: an opted-in member's name is replaced too if someone who didn't opt in
-shares it, a month written "Jan" is replaced when a hidden member is called Janet, and so is a date
-and time written with dashes ("2026-10-24 10:30"), which looks like a phone number.
+Robert, "Will" for William), a misspelling, or a description ("her roommate") can still appear inside a
+quote from someone who opted in. It errs towards leaving messages out: a chat with a non-opted Will
+quotes nothing that says "will", a month written "Jan" is replaced when a hidden member is called
+Janet, and a 10-digit number that isn't a phone number still keeps its message out.
 
 - The CLI runs locally, with no network calls and no accounts. Nothing is uploaded. The Discord bot
   and the iMessage bridge post the finished slides back into the chat they were run in, and nowhere else.
