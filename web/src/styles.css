@@ -1,0 +1,388 @@
+@import "tailwindcss";
+
+/*
+ * Dark liquid glass, lifted from BioPath (identification med/DESIGN.md, App.css,
+ * apple-theme.css, index.css). Tokens and the keyframes liquidShimmer,
+ * liquidPillSettle, borderTravel and ambientDrift are verbatim; Wrapped re-hues
+ * only through the --theme-* variables: violet primary, fuchsia accent, sky secondary.
+ * Every backdrop-filter has its -webkit- twin (the target is Safari), written first:
+ * lightningcss keeps the last of two equivalent declarations, so the standard one
+ * goes last and the build re-adds the prefix (scripts/smoke_web.mjs checks both ship).
+ */
+
+@theme {
+  --font-sans: 'General Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'General Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --breakpoint-xs: 475px;
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+:root {
+  /* Theme hooks: Wrapped's hue */
+  --theme-primary: #a78bfa;        --theme-primary-rgb: 167, 139, 250;
+  --theme-primary-dark: #7c3aed;   --theme-primary-dark-rgb: 124, 58, 237;
+  --theme-primary-light: #c4b5fd;  --theme-primary-light-rgb: 196, 181, 253;
+  --theme-accent: #e879f9;         --theme-accent-rgb: 232, 121, 249;
+  --theme-secondary: #38bdf8;      --theme-secondary-rgb: 56, 189, 248;
+  --theme-secondary-light-rgb: 125, 211, 252;
+
+  --color-primary: var(--theme-primary, #34d399);
+  --color-primary-dark: var(--theme-primary-dark, #059669);
+  --color-primary-light: var(--theme-primary-light, #6ee7b7);
+  --color-secondary: var(--theme-secondary, #38bdf8);
+
+  /* Backgrounds */
+  --color-bg-primary: #030712; --color-bg-secondary: #111827; --color-bg-tertiary: #1f2937;
+  /* Text */
+  --color-text-primary: #f8fafc; --color-text-secondary: #cbd5e1; --color-text-tertiary: #94a3b8;
+  /* Glass */
+  --glass-bg: rgba(255,255,255,0.07); --glass-border: rgba(255,255,255,0.14);
+  --glass-shadow: 0 8px 32px rgba(0,0,0,0.3); --glass-blur: blur(16px);
+  /* Radius */
+  --radius-sm:.5rem; --radius-md:.75rem; --radius-lg:1rem; --radius-xl:1.25rem; --radius-2xl:1.5rem; --radius-full:9999px;
+  /* Transitions */
+  --transition-fast:150ms cubic-bezier(0.4,0,0.2,1);
+  --transition-base:250ms cubic-bezier(0.4,0,0.2,1);
+  --transition-slow:350ms cubic-bezier(0.4,0,0.2,1);
+  --transition-spring:500ms cubic-bezier(0.34,1.56,0.64,1);
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top,0px); --safe-bottom: env(safe-area-inset-bottom,0px);
+  color-scheme: dark;
+}
+
+html { height: -webkit-fill-available; background: #030712; }
+
+body {
+  margin: 0;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: 'General Sans', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  min-height: 100vh; min-height: -webkit-fill-available;
+}
+::selection { background: rgba(var(--theme-primary-rgb), 0.3); color: var(--color-text-primary); }
+button { font: inherit; color: inherit; }
+.font-display { font-family: var(--font-display); font-optical-sizing: auto; letter-spacing: -0.03em; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* ── Ambient background (DESIGN.md §6): fixed wash + slow drifting blobs ───────── */
+.app-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--color-bg-primary); }
+.app-bg::before {
+  content: '';
+  position: fixed;
+  top: -50%; left: -50%; right: -50%; bottom: -50%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(var(--theme-primary-rgb, 52, 211, 153), 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(var(--theme-secondary-rgb, 56, 189, 248), 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(var(--theme-secondary-light-rgb, 125, 211, 252), 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+/* Wrapped turns the blobs up from BioPath's 0.03 so the frosted panels have something to frost. */
+.glow-blob {
+  position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%;
+  filter: blur(40px); opacity: 0.55; will-change: transform;
+}
+.glow-a { top: -25vmax; left: -20vmax; background: radial-gradient(circle, rgba(var(--theme-primary-dark-rgb), 0.45) 0%, transparent 60%); animation: ambientDriftA 25s ease-in-out infinite alternate; }
+.glow-b { bottom: -30vmax; right: -25vmax; background: radial-gradient(circle, rgba(var(--theme-accent-rgb), 0.28) 0%, transparent 60%); animation: ambientDriftB 30s ease-in-out infinite alternate; }
+.glow-c { top: 30%; right: -30vmax; width: 50vmax; height: 50vmax; background: radial-gradient(circle, rgba(var(--theme-secondary-rgb), 0.16) 0%, transparent 60%); animation: ambientDriftA 28s ease-in-out infinite alternate-reverse; }
+
+@keyframes ambientDriftA {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(3%, 5%) scale(1.02); }
+}
+@keyframes ambientDriftB {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-3%, -4%) scale(1.03); }
+}
+
+/* ── Glass surfaces (DESIGN.md §7.1) ───────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+.glass-hover:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5),
+              inset 0 1px 0 rgba(var(--theme-primary-rgb), 0.05),
+              0 0 20px rgba(var(--theme-primary-rgb), 0.06);
+}
+/* GlassSurface.tsx's WebKit path (no SVG displacement in Safari): blur + saturate + brightness */
+.glass-strong {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.8) brightness(1.2);
+  backdrop-filter: blur(12px) saturate(1.8) brightness(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 0 rgba(255, 255, 255, 0.1);
+}
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Featured card: traveling conic-gradient outline (apple-theme.css) ─────────── */
+.featured { position: relative; }
+.featured::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    transparent 0%,
+    transparent 22%,
+    rgba(var(--theme-primary-rgb, 52, 211, 153), 0.9) 26%,
+    rgba(var(--theme-secondary-rgb, 56, 189, 248), 0.8) 30%,
+    rgba(var(--theme-primary-light-rgb, 110, 231, 183), 0.7) 34%,
+    transparent 38%,
+    transparent 72%,
+    rgba(var(--theme-primary-rgb, 52, 211, 153), 0.9) 76%,
+    rgba(var(--theme-secondary-rgb, 56, 189, 248), 0.8) 80%,
+    rgba(var(--theme-primary-light-rgb, 110, 231, 183), 0.7) 84%,
+    transparent 88%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: borderTravel 4s linear infinite;
+  filter: blur(0.5px);
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes borderTravel {
+  to { --border-angle: 360deg; }
+}
+
+/* ── Buttons (DESIGN.md §7.3) ──────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 48px; padding: 0.8rem 1.4rem; border: 0; cursor: pointer;
+  font-weight: 600; color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--theme-accent) 55%, var(--color-primary-dark));
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 14px rgba(var(--theme-primary-rgb), 0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+  transition: transform var(--transition-spring), box-shadow var(--transition-base);
+  position: relative; overflow: hidden;
+}
+.btn-primary::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.15) 48%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.15) 52%, transparent 70%);
+  background-size: 300% 100%;
+  animation: liquidShimmer 6s ease-in-out infinite;
+  pointer-events: none;
+}
+.btn-primary:hover { box-shadow: 0 6px 20px rgba(var(--theme-primary-rgb), 0.5), 0 0 40px rgba(var(--theme-primary-rgb), 0.15); }
+.btn-primary:active { transform: scale(0.95); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-glass {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  min-height: 44px; padding: 0.7rem 1.1rem; cursor: pointer; font-weight: 500;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition-spring), background var(--transition-fast);
+}
+.btn-glass:hover { background: rgba(255,255,255,0.11); }
+.btn-glass:active { transform: scale(0.95); }
+:focus-visible { outline: 2px solid var(--color-primary-light); outline-offset: 2px; }
+
+/* ── Bottom tab bar: BioPath's segmented control with the liquid glass pill ────── */
+.mode-selector {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+.mode-btn {
+  flex: 1 1 0%;
+  padding: 0.5rem 0.25rem;
+  border-radius: calc(var(--radius-xl) - 0.3rem);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+  min-height: 52px;
+  position: relative;
+  z-index: 1;
+  display: flex; flex-direction: column; gap: 0.2rem;
+  align-items: center;
+  justify-content: center;
+}
+.mode-btn:hover { color: var(--color-text-secondary); }
+.mode-btn:active { transform: scale(0.95); }
+.mode-btn.active { color: white; }
+.mode-glass-indicator {
+  position: absolute;
+  top: 0.3rem;
+  bottom: 0.3rem;
+  border-radius: calc(var(--radius-xl) - 0.3rem);
+  background: linear-gradient(135deg, rgba(var(--theme-primary-rgb, 52, 211, 153), 0.85), rgba(var(--theme-primary-dark-rgb, 5, 150, 105), 0.9));
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 2px 12px rgba(var(--theme-primary-rgb, 52, 211, 153), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              height 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 0;
+  overflow: hidden;
+}
+.mode-glass-indicator::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.15) 48%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.15) 52%,
+    transparent 70%
+  );
+  background-size: 300% 100%;
+  animation: liquidShimmer 6s ease-in-out infinite;
+}
+.mode-glass-indicator.moving { animation: liquidPillSettle 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* Bottom bar shell (BioPath .bottom-nav) */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+  padding: 0.5rem 0.75rem calc(var(--safe-bottom, 0px) + 0.6rem);
+  background: linear-gradient(to top, rgba(3, 7, 18, 0.9), rgba(3, 7, 18, 0.55) 70%, transparent);
+}
+.bottom-nav .mode-selector {
+  background: rgba(17, 24, 39, 0.55);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  backdrop-filter: blur(24px) saturate(1.3);
+}
+.bottom-nav .mode-selector::before {
+  content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), rgba(var(--theme-primary-rgb, 52, 211, 153), 0.2), rgba(255, 255, 255, 0.15), transparent);
+}
+
+/* ── Liquid glass keyframes (apple-theme.css, verbatim) ────────────────────────── */
+@keyframes liquidShimmer {
+  0% {
+    background-position: -200% 50%;
+    opacity: 0.6;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    background-position: 200% 50%;
+    opacity: 0.6;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    background-position: -200% 50%;
+    opacity: 0.6;
+  }
+}
+@keyframes liquidPillSettle {
+  0% {
+    transform: scaleX(0.93) scaleY(1.04);
+  }
+  50% {
+    transform: scaleX(1.02) scaleY(0.98);
+  }
+  75% {
+    transform: scaleX(0.99) scaleY(1.01);
+  }
+  100% {
+    transform: scaleX(1) scaleY(1);
+  }
+}
+
+/* ── Avatars and story rings ───────────────────────────────────────────────────── */
+.avatar {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  border-radius: 9999px; color: #fff; font-weight: 700; font-family: var(--font-display);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 6px rgba(0,0,0,0.25);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+.story-ring {
+  padding: 3px; border-radius: 9999px;
+  background: conic-gradient(from 210deg, var(--theme-primary), var(--theme-accent), var(--theme-secondary), var(--theme-primary));
+  transition: transform var(--transition-spring);
+}
+.story-ring > * { border: 3px solid #030712; }
+.story-ring-btn:active .story-ring { transform: scale(0.92); }
+
+/* ── Chat bubble (receipts) ────────────────────────────────────────────────────── */
+.bubble {
+  background: rgba(255, 255, 255, 0.09);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1.25rem 1.25rem 1.25rem 0.4rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.bubble.reply { border-radius: 1.25rem 1.25rem 0.4rem 1.25rem; background: rgba(var(--theme-primary-rgb), 0.18); border-color: rgba(var(--theme-primary-rgb), 0.3); }
+.clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: var(--lines, 4); }
+
+/* ── Story player ──────────────────────────────────────────────────────────────── */
+.phone {
+  position: relative; width: min(100%, 420px); aspect-ratio: 9 / 16; border-radius: 2rem; overflow: hidden;
+  background: #050816;
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 6px rgba(255,255,255,0.03), 0 0 60px rgba(var(--slide-rgb, var(--theme-primary-rgb)), 0.18);
+  transition: box-shadow 600ms ease;
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
+.phone-glow { position: absolute; inset: 0; pointer-events: none; transition: background 700ms ease; }
+.phone-glow::before, .phone-glow::after {
+  content: ''; position: absolute; width: 120%; height: 70%; border-radius: 50%; filter: blur(30px);
+}
+.phone-glow::before { top: -25%; left: -30%; background: radial-gradient(circle, rgba(var(--slide-rgb), 0.55), transparent 65%); animation: ambientDriftA 12s ease-in-out infinite alternate; }
+.phone-glow::after { bottom: -25%; right: -30%; background: radial-gradient(circle, rgba(var(--slide-rgb-2), 0.4), transparent 65%); animation: ambientDriftB 14s ease-in-out infinite alternate; }
+.progress-seg { height: 3px; flex: 1; border-radius: 9999px; background: rgba(255,255,255,0.25); overflow: hidden; }
+.progress-seg > i { display: block; height: 100%; background: #fff; transform-origin: left center; }
+
+/* ── Reduced motion / perf gate (DESIGN.md §5.4) ───────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .glow-blob, .phone-glow::before, .phone-glow::after, .featured::after,
+  .mode-glass-indicator::before, .btn-primary::before { animation: none !important; }
+  .mode-glass-indicator { transition: none; }
+}
+
+/* Hide scrollbars on horizontal rows */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
