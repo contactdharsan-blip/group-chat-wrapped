@@ -232,7 +232,8 @@ export function Story({ data, who, onClose }: { data: Wrapped; who: string | nul
           onPointerDown={down} onPointerUp={() => up(1)} onPointerLeave={() => { if (holdTimer.current) clearTimeout(holdTimer.current); if (held.current) { held.current = false; setPaused(false); } }} onContextMenu={(e) => e.preventDefault()} />
       </div>
 
-      <aside className="hidden w-full max-w-sm flex-col gap-4 md:flex" aria-label="Receipts">
+      {/* As tall as the phone, so a long receipt scrolls inside its card instead of under the tab bar. */}
+      <aside className="hidden w-full max-w-sm flex-col gap-4 md:flex md:max-h-[calc(100dvh-200px)]" aria-label="Receipts">
         <Card className="gap-0 p-5">
           <p className="font-head text-xs uppercase tracking-wider text-muted-foreground">Slide {idx + 1} of {deck.length}</p>
           {side ? (
@@ -246,7 +247,7 @@ export function Story({ data, who, onClose }: { data: Wrapped; who: string | nul
           )}
         </Card>
         {side && (
-          <Card className="gap-3 p-5">
+          <Card className="min-h-0 gap-3 overflow-y-auto p-5">
             <p className="font-head text-xs uppercase tracking-wider text-muted-foreground">The receipt, in full</p>
             {side.context && <Bubble r={side.context} lines={20} size="text-sm" />}
             <Bubble r={side.receipt} reply={!!side.context} lines={30} size="text-sm" />
